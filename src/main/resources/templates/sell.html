@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="zh-Hant" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>我要賣車 - 卓越中古車</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100">
+
+    <nav class="bg-white shadow-md p-4">
+        <div class="container mx-auto flex justify-between items-center">
+            <a href="/index" class="text-blue-600 font-bold hover:text-blue-800 transition">
+                ← 返回首頁
+            </a>
+            <span class="text-gray-500 text-sm">卓越中古車服務中心</span>
+        </div>
+    </nav>
+
+    <div class="container mx-auto py-12 px-6">
+        <div class="max-w-2xl mx-auto bg-white rounded-xl shadow-lg p-8">
+            
+            <div class="text-center mb-10">
+                <h2 class="text-3xl font-bold text-gray-800">提交您的愛車資訊</h2>
+                <p class="text-gray-600 mt-2">請填寫下方表單，我們的專員將會盡快與您聯繫進行專業估價。</p>
+            </div>
+
+            <form th:action="@{/submit-car}" method="post" class="space-y-6">
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">車輛名稱 (品牌/型號) <span class="text-red-500">*</span></label>
+                    <input type="text" name="name" required
+                           placeholder="例如：Toyota RAV4" 
+                           class="w-full border border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition">
+                </div>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">出廠年份 <span class="text-red-500">*</span></label>
+                        <select name="year" required 
+                                class="w-full border border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none bg-white transition">
+                            <option value="" disabled selected>請選擇年份</option>
+                            <option th:each="y : ${#numbers.sequence(2026, 1990, -1)}" 
+                                    th:value="${y}" 
+                                    th:text="${y} + ' 年'"></option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">預售價格 <span class="text-red-500">*</span></label>
+                        <input type="text" name="price" required
+                               placeholder="例如：80萬" 
+                               class="w-full border border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">聯絡電話 <span class="text-red-500">*</span></label>
+                    <input type="tel" name="phone" required
+                           placeholder="0912-345-678" 
+                           class="w-full border border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition">
+                </div>
+
+                <div class="pt-4">
+                    <button type="submit" 
+                            class="w-full bg-blue-600 text-white font-bold py-4 rounded-lg hover:bg-blue-700 shadow-md transform hover:-translate-y-0.5 transition active:scale-95">
+                        提交賣車申請
+                    </button>
+                    <p class="text-xs text-gray-400 mt-4 text-center">
+                        * 提交即表示您同意專員聯繫您提供車輛相關諮詢服務
+                    </p>
+                </div>
+
+            </form>
+        </div>
+    </div>
+
+</body>
+</html>

@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="zh-Hant" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>優質二手車行 - 找尋您的理想座駕</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body class="bg-gray-50 text-gray-800">
+	
+	<nav class="bg-white shadow-md sticky top-0 z-50">
+	    <div class="container mx-auto px-6 py-4 flex justify-between items-center relative">
+	        
+	        <a th:href="@{/index}" class="text-2xl font-bold text-blue-600 tracking-tight z-10">
+	            <i class="fas fa-car-side mr-2"></i>卓越中古車
+	        </a>
+
+	        <div class="hidden md:flex absolute left-1/2 transform -translate-x-1/2 space-x-12 font-medium">
+	            <a th:href="@{/index}" class="hover:text-blue-600 transition">所有車輛</a>
+	            <a th:href="@{/sell}" class="hover:text-blue-600 transition">我要賣車</a>
+	            <a th:href="@{/reserve}" class="hover:text-blue-600 transition">預約賞車</a>
+	            <a href="#about-us" class="hover:text-blue-600 transition">關於我們</a>
+	        </div>
+
+	        <div class="flex items-center space-x-4 z-10">
+	            <div th:if="${session.nickname != null}" class="flex items-center space-x-4">
+	                <a th:href="@{/my-reservations}" 
+	                   class="bg-gray-100 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-200 transition flex items-center text-sm font-medium">
+	                    <i class="fas fa-list-ul mr-2 text-blue-600"></i>我的預約
+	                </a>
+	                <span class="font-medium text-gray-700">
+	                    Hi, <span th:text="${session.nickname}">使用者</span>
+	                </span>
+	                <a th:href="@{/logout}" class="text-sm text-red-500 hover:underline">登出</a>
+	            </div>
+
+	            <a th:if="${session.nickname == null}" th:href="@{/login}" 
+	               class="bg-blue-600 text-white px-5 py-2 rounded-full hover:bg-blue-700 transition inline-block">
+	                登入 / 註冊
+	            </a>
+	        </div>
+	            
+	    </div>
+	</nav>
+
+    <section class="bg-blue-900 text-white py-20 px-6 bg-cover bg-center" style="background-image: linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), url('https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?auto=format&fit=crop&q=80&w=1920');">
+        <div class="container mx-auto text-center">
+            <h1 class="text-4xl md:text-6xl font-bold mb-6">尋找您的下一部好車</h1>
+            <p class="text-xl mb-10 text-gray-200">超過 500 輛嚴選中古車，提供完整鑑定報告</p>
+            
+			<form action="/index" method="get" class="bg-white p-4 rounded-lg shadow-lg max-w-4xl mx-auto flex flex-wrap gap-4 text-gray-700">
+			    
+			    <input type="text" name="keyword" th:value="${param.keyword}" placeholder="輸入品牌或車名 (如：BMW)..." class="flex-1 min-w-[200px] border p-2 rounded focus:outline-none focus:ring-2 focus:ring-blue-500">
+			    
+			    <select class="flex-1 min-w-[150px] border p-2 rounded">
+			        <option>價格區間</option>
+			        <option>50萬以下</option>
+			        <option>50-100萬</option>
+			        <option>100萬以上</option>
+			    </select>
+
+			    <button type="submit" class="w-full md:w-auto bg-blue-600 text-white px-8 py-2 rounded hover:bg-blue-700 transition font-bold">
+			        立即搜尋
+			    </button>
+			</form>
+		</div>
+	</section>
+    <div class="bg-yellow-100 p-4 text-center">
+        <span class="text-xl font-bold text-red-600" th:text="${message}">載入中...</span>
+    </div>
+
+    <section class="container mx-auto py-16 px-6">
+        <h2 class="text-3xl font-bold mb-8 flex items-center">
+            <span class="border-l-4 border-blue-600 h-8 mr-3"></span>
+            熱門精選車款
+        </h2>
+        
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+            
+            <div th:each="c : ${cars}" class="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-xl transition-shadow border border-gray-100">
+                <img th:src="${c.image}" alt="Car" class="w-full h-48 object-cover">
+                
+				<div class="p-4">
+				    <span th:text="${c.year}" class="bg-blue-100 text-blue-800 text-xs font-semibold px-2.5 py-0.5 rounded">年份</span>
+				    <h3 th:text="${c.name}" class="text-xl font-bold mt-2 text-gray-800">車名</h3>
+				    <p th:text="${c.price}" class="text-red-600 font-bold text-lg mt-1">價格</p>
+
+				    <div class="flex gap-2 mt-4">
+				        <button th:onclick="'openModal(' + ${c.id} + ')'" 
+				                class="flex-1 bg-gray-100 text-gray-700 py-2 rounded font-semibold hover:bg-gray-200 transition">
+				            查看詳情
+				        </button>
+				        <a th:href="@{/reserve(carName=${c.name})}" 
+				           class="flex-1 bg-blue-600 text-white py-2 rounded text-center font-semibold hover:bg-blue-700 transition">
+				            預約賞車
+				        </a>
+				    </div>
+
+				    <div class="mt-4 pt-4 border-t border-gray-100 flex justify-between text-gray-500 text-sm">
+				        <span><i class="fas fa-gas-pump mr-1"></i> <span th:text="${c.fuelType}">汽油</span></span>
+				        <span><i class="fas fa-cog mr-1"></i> <span th:text="${c.transmission}">自動</span></span>
+				        <span><i class="fas fa-map-marker-alt mr-1"></i> 台北市</span>
+				    </div>
+				</div>
+            </div>
+            </div>
+    </section>
+	
+	<section id="about-us" class="bg-white py-20 px-6">
+	    <div class="container mx-auto">
+	        <div class="text-center mb-16">
+	            <h2 class="text-3xl font-bold mb-4">核心價值：創新服務，移動無憂</h2>
+	            <p class="text-gray-600 max-w-2xl mx-auto">我們不只是在賣車，是在為您建構一個無後顧之憂的移動生活。透過數位技術，讓購車流程變得優雅且透明。</p>
+	        </div>
+
+	        <div class="grid grid-cols-1 md:grid-cols-3 gap-12">
+	            <div class="text-center p-8 rounded-2xl bg-blue-50 hover:shadow-lg transition">
+	                <div class="w-16 h-16 bg-blue-600 text-white rounded-full flex items-center justify-center mx-auto mb-6 text-2xl">
+	                    <i class="fas fa-mobile-alt"></i>
+	                </div>
+	                <h3 class="text-xl font-bold mb-4">遠端即現場</h3>
+	                <p class="text-gray-600 leading-relaxed">不必出門！透過高清視訊與 4K 環景攝影，所有車況細節盡收眼底，就像親臨現場。</p>
+	            </div>
+
+	            <div class="text-center p-8 rounded-2xl bg-blue-50 hover:shadow-lg transition">
+	                <div class="w-16 h-16 bg-blue-600 text-white rounded-full flex items-center justify-center mx-auto mb-6 text-2xl">
+	                    <i class="fas fa-bolt"></i>
+	                </div>
+	                <h3 class="text-xl font-bold mb-4">閃電交付</h3>
+	                <p class="text-gray-600 leading-relaxed">一站式數位化代辦。從貸款試算到過戶手續，最快 24 小時內讓您開著愛車回家。</p>
+	            </div>
+
+	            <div class="text-center p-8 rounded-2xl bg-blue-50 hover:shadow-lg transition">
+	                <div class="w-16 h-16 bg-blue-600 text-white rounded-full flex items-center justify-center mx-auto mb-6 text-2xl">
+	                    <i class="fas fa-headset"></i>
+	                </div>
+	                <h3 class="text-xl font-bold mb-4">雲端小管家</h3>
+	                <p class="text-gray-600 leading-relaxed">購車後才是服務的開始。專屬線上諮詢，保養提醒與維修紀錄隨時查詢，我們是您的最強後援。</p>
+	            </div>
+	        </div>
+	    </div>
+	</section>
+
+    <footer class="bg-gray-900 text-gray-400 py-12 px-6">
+        <div class="container mx-auto grid grid-cols-1 md:grid-cols-4 gap-8">
+            <div>
+                <h4 class="text-white text-lg font-bold mb-4">卓越中古車</h4>
+                <p class="text-sm leading-relaxed">我們致力於提供最透明、最公平的車輛交易環境。每一台車都經過 180 項嚴格檢驗。</p>
+            </div>
+            <div>
+                <h4 class="text-white text-lg font-bold mb-4">快速連結</h4>
+                <ul class="space-y-2 text-sm">
+                    <li><a href="#" class="hover:text-white transition">常見問題</a></li>
+                    <li><a href="#" class="hover:text-white transition">貸款試算</a></li>
+                    <li><a href="#" class="hover:text-white transition">服務據點</a></li>
+                </ul>
+            </div>
+            <div>
+                <h4 class="text-white text-lg font-bold mb-4">聯絡我們</h4>
+                <p class="text-sm">地址：台北市信義區某某路 88 號</p>
+                <p class="text-sm">電話：02-1234-5678</p>
+            </div>
+            <div>
+                <h4 class="text-white text-lg font-bold mb-4">追蹤我們</h4>
+                <div class="flex space-x-4">
+                    <a href="#" class="text-xl hover:text-white transition"><i class="fab fa-facebook"></i></a>
+                    <a href="#" class="text-xl hover:text-white transition"><i class="fab fa-line"></i></a>
+                    <a href="#" class="text-xl hover:text-white transition"><i class="fab fa-instagram"></i></a>
+                </div>
+            </div>
+        </div>
+        <div class="border-t border-gray-800 mt-10 pt-6 text-center text-xs">
+            © 2026 卓越中古車版權所有.
+        </div>
+    </footer>
+	
+	<div id="carModal" class="fixed inset-0 z-[60] hidden overflow-y-auto px-4 py-6">
+	    <div class="fixed inset-0 bg-black/70 backdrop-blur-sm" onclick="closeModal()"></div>
+
+	    <div class="relative mx-auto bg-white rounded-2xl shadow-2xl max-w-3xl overflow-hidden transform transition-all mt-10">
+	        <div class="flex flex-col md:flex-row">
+	            <div class="md:w-1/2 h-64 md:h-auto">
+	                <img id="modalImage" src="" class="w-full h-full object-cover">
+	            </div>
+	            <div class="md:w-1/2 p-8">
+	                <div class="flex justify-between items-start">
+	                    <h2 id="modalName" class="text-2xl font-bold text-gray-800"></h2>
+	                    <button onclick="closeModal()" class="text-gray-400 hover:text-gray-600 text-3xl">&times;</button>
+	                </div>
+	                <p id="modalPrice" class="text-red-500 text-xl font-bold mt-2"></p>
+	                <hr class="my-4">
+	                <div class="space-y-3 text-gray-600 text-sm">
+	                    <p><strong>📅 年份：</strong> <span id="modalYear"></span></p>
+	                    <p><strong>⛽ 規格：</strong> <span id="modalFuel"></span></p>
+	                    <p><strong>⚙️ 變速：</strong> <span id="modalTrans"></span></p>
+	                    <p><strong>🛣️ 里程：</strong> <span id="modalMileage"></span></p>
+	                    <p><strong>🌟 配備：</strong> <span id="modalFeatures" class="text-blue-600 font-medium"></span></p>
+	                </div>
+	                <a id="modalReserveLink" href="" class="mt-8 block w-full text-center bg-blue-600 text-white py-3 rounded-xl font-bold hover:bg-blue-700 transition">
+	                    立即預約賞車
+	                </a>
+	            </div>
+	        </div>
+	    </div>
+	</div>
+	
+	<script th:inline="javascript">
+	    /* 這裡由 Thymeleaf 把後端的 List<Car> 轉成 JS 陣列 */
+	    var cars = [[${cars}]];
+
+	    function openModal(carId) {
+	        // 1. 尋找對應 ID 的車
+	        var car = cars.find(function(item) {
+	            return item.id == carId;
+	        });
+
+	        if (car) {
+	            // 2. 填入內容
+	            document.getElementById('modalImage').src = car.image; // 對應 Car.java 的 image
+	            document.getElementById('modalName').innerText = car.name;
+	            document.getElementById('modalPrice').innerText = car.price;
+	            document.getElementById('modalYear').innerText = car.year;
+	            document.getElementById('modalFuel').innerText = car.fuelType;
+	            document.getElementById('modalTrans').innerText = car.transmission;
+	            document.getElementById('modalMileage').innerText = car.mileage.toLocaleString() + " km";
+	            
+	            // 處理配備清單
+	            if (car.features && car.features.length > 0) {
+	                document.getElementById('modalFeatures').innerText = car.features.join('、');
+	            } else {
+	                document.getElementById('modalFeatures').innerText = "基本配備";
+	            }
+
+	            // 更新預約按鈕連結
+	            document.getElementById('modalReserveLink').href = '/reserve?carName=' + encodeURIComponent(car.name);
+
+	            // 3. 顯示 Modal
+	            document.getElementById('carModal').classList.remove('hidden');
+	            document.body.style.overflow = 'hidden'; // 防止背景滾動
+	        }
+	    }
+
+	    function closeModal() {
+	        document.getElementById('carModal').classList.add('hidden');
+	        document.body.style.overflow = 'auto'; // 恢復背景滾動
+	    }
+	</script>
+
+</body>
+</html>

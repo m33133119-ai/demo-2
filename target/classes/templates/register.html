@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="zh-Hant" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>加入會員 - 卓越中古車</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body class="bg-gray-100 min-h-screen flex items-center justify-center py-12 px-4">
+    <div class="bg-white p-8 rounded-2xl shadow-xl w-full max-w-md border border-gray-100">
+        <div class="text-center mb-8">
+            <a href="/index" class="text-3xl font-bold text-blue-600">卓越中古車</a>
+            <h2 class="text-xl text-gray-500 mt-2">建立您的專屬帳號</h2>
+        </div>
+        
+		<form th:action="@{/register}" method="post" class="space-y-5">
+		    <div>
+		        <label class="block text-sm font-medium text-gray-700 mb-1">真實姓名</label>
+		        <div class="relative">
+		            <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-400">
+		                <i class="fas fa-user"></i>
+		            </span>
+		            <input type="text" name="name" required 
+		                   class="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition"
+		                   placeholder="請輸入您的姓名">
+		        </div>
+		    </div>
+
+		    <div>
+		        <label class="block text-sm font-medium text-gray-700 mb-1">電子郵件</label>
+		        <div class="relative">
+		            <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-400">
+		                <i class="fas fa-envelope"></i>
+		            </span>
+		            <input type="email" name="email" required 
+		                   class="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition"
+		                   placeholder="example@mail.com">
+		        </div>
+		    </div>
+
+			<div>
+			    <label class="block text-sm font-medium text-gray-700 mb-1">設定密碼 (8位數字)</label>
+			    <div class="relative">
+			        <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-400">
+			            <i class="fas fa-lock"></i>
+			        </span>
+			        <input type="password" name="password" required 
+			               minlength="8" 
+			               maxlength="8" 
+			               pattern="\d{8}" 
+			               inputmode="numeric"
+			               title="請輸入剛好 8 位數字"
+			               class="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition"
+			               placeholder="請輸入 8 位數字">
+			    </div>
+			</div>
+
+			<div>
+			    <label class="block text-sm font-medium text-gray-700 mb-1">確認密碼</label>
+			    <div class="relative">
+			        <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-400">
+			            <i class="fas fa-shield-alt"></i>
+			        </span>
+			        <input type="password" name="confirmPassword" required 
+			               minlength="8" 
+			               maxlength="8" 
+			               pattern="\d{8}" 
+			               inputmode="numeric"
+			               title="請再次輸入 8 位數字"
+			               class="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition"
+			               placeholder="再次輸入 8 位數字以確認">
+			    </div>
+			</div>
+
+		    <div class="flex items-center">
+		        <input type="checkbox" id="terms" required class="h-4 w-4 text-blue-600 border-gray-300 rounded">
+		        <label for="terms" class="ml-2 block text-sm text-gray-600">
+		            我同意 <a href="#" class="text-blue-600 hover:underline">服務條款</a> 與 <a href="#" class="text-blue-600 hover:underline">隱私政策</a>
+		        </label>
+		    </div>
+
+		    <button type="submit" 
+		            class="w-full bg-blue-600 text-white py-3 rounded-lg font-bold hover:bg-blue-700 shadow-lg transition transform active:scale-95">
+		        立即註冊帳號
+		    </button>
+		</form>
+        
+        <div class="mt-8 text-center text-sm text-gray-500">
+            已經有帳號了？ <a href="/login" class="text-blue-600 font-bold hover:underline">返回登入</a>
+        </div>
+    </div>
+</body>
+</html>
