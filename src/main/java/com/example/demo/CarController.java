@@ -12,12 +12,16 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.ModelAttribute;
 
 
 @Controller
 public class CarController {
-	// 在所有方法之外，類別的最上方加入這行
+	
 	private static List<Reservation> reservationList = new ArrayList<>();
+	
+	@Autowired
+    private ReservationRepository reservationRepository;
 	
 	@Autowired
     private CarRepository carRepository;
@@ -27,15 +31,14 @@ public class CarController {
 
 	@GetMapping("/sell")
 	public String showSellPage(HttpSession session, Model model) {
-	    // 1. 檢查 Session 裡有沒有使用者物件
+	    
 	    if (session.getAttribute("user") == null) {
-	        // ❌ 如果沒登入，把訊息塞進去，並強制跳轉到登入頁
+	        
 	        model.addAttribute("message", "🔒 請先登入帳號，才能提交賣車申請！");
 	        return "login"; 
 	    }
 
-	    // ✅ 如果有登入，才讓使用者看到賣車頁面
-	    // 順便把暱稱帶過去，讓導覽列顯示名字
+	   
 	    String nickname = (String) session.getAttribute("nickname");
 	    model.addAttribute("nickname", nickname);
 	    
@@ -48,7 +51,7 @@ public class CarController {
 	        @RequestParam Integer year, 
 	        @RequestParam String price, 
 	        @RequestParam String phone, 
-	        Model model) { // 記得要有 Model model 才能傳文字回網頁
+	        Model model) { 
 
 	    
 	    System.out.println("收到賣車申請：" + name + "，電話：" + phone);
@@ -66,22 +69,21 @@ public class CarController {
 	                             HttpSession session, // ✨ 注入 Session 進行檢查
 	                             Model model) {
 	    
-	    // 1. 檢查使用者是否已登入
+	    
 	    if (session.getAttribute("user") == null) {
-	        // ❌ 沒登入就踢回登入頁
+	       
 	        model.addAttribute("message", "🔒 請先登入帳號，才能預約賞車！");
 	        return "login"; 
 	    }
 
-	    // ✅ 已登入，繼續原本的邏輯
-	    // 取得車輛清單與暱稱
+	    
 	    List<Car> allCars = getFullCarList();
 	    String nickname = (String) session.getAttribute("nickname");
 	    
 	    model.addAttribute("allCars", allCars);
 	    model.addAttribute("nickname", nickname); // 讓預約頁面的導覽列也能顯示名字
 	    model.addAttribute("selectedCar", carName);
-	    
+	    model.addAttribute("reservation", new Reservation());
 	    return "reserve"; 
 	}
 
@@ -95,7 +97,7 @@ public class CarController {
 
 	    reservationList.add(new Reservation(customerName, carName, date));
 
-	    // ✨ 確保 Session 裡也有暱稱 (防止預約人姓名跟登入帳號不同)
+	    
 	    String nickname = (String) session.getAttribute("nickname");
 	    if (nickname == null) {
 	        session.setAttribute("nickname", customerName);
@@ -116,7 +118,7 @@ public class CarController {
 	
 	@GetMapping("/register")
 	public String showRegisterPage() {
-	    return "register"; // 這裡回傳的是 register.html 檔案名
+	    return "register";
 	}
 
 	
@@ -128,20 +130,19 @@ public class CarController {
 	        @RequestParam String confirmPassword,
 	        Model model) {
 	    
-	    // 1. 檢查密碼是否一致
+	    
 	    if (!password.equals(confirmPassword)) {
 	        model.addAttribute("message", "❌ 註冊失敗：兩次輸入的密碼不一致！");
 	        return "register"; 
 	    }
 
-	    // ✨ 2. 新增：檢查密碼是否剛好為 8 位數字 (使用正則表達式)
-	    // \\d 代表數字, {8} 代表剛好 8 個
+	    
 	    if (!password.matches("\\d{8}")) {
 	        model.addAttribute("message", "❌ 註冊失敗：密碼必須是剛好 8 位數字！");
 	        return "register";
 	    }
 
-	    // 3. 建立 User 物件並存入資料庫
+	    
 	    User newUser = new User();
 	    newUser.setName(name);
 	    newUser.setEmail(email);
@@ -160,16 +161,16 @@ public class CarController {
 	                          HttpSession session, 
 	                          Model model) {
 	    
-	    // ✨ 新增：登入時也先檢查格式，如果不符就不用查資料庫了
+	    
 	    if (!password.matches("\\d{8}")) {
 	        model.addAttribute("message", "❌ 格式錯誤：請輸入 8 位數字密碼！");
 	        return "login";
 	    }
 
-	    // 1. 去資料庫找這位使用者
+	    
 	    User user = userRepository.findByEmail(username);
 
-	    // 2. 進行嚴格檢查
+	   
 	    if (user != null && user.getPassword().equals(password)) {
 	        session.setAttribute("nickname", user.getName());
 	        session.setAttribute("user", user);
@@ -186,7 +187,7 @@ public class CarController {
 	private List<Car> getFullCarList() {
 	    List<Car> carList = new ArrayList<>();
 	    
-	    // 將原本的 List.of(...) 全部改成 Arrays.asList(...)
+	    
 	    carList.add(new Car(1L, "BMW 3-Series Sedan", "$1,480,000", "2021 年份", "/images/Bmw3.jpg", 
 	                "2.0L 汽油", "手自排", 25000, Arrays.asList("天窗", "感應尾門", "ACC自適應巡航")));
 	    
@@ -201,25 +202,26 @@ public class CarController {
 	    
 	    return carList;
 	}
+	
 	@GetMapping("/my-reservations")
 	public String showMyReservations(HttpSession session, Model model) {
-	    // ✨ 新增：從 Session 拿出暱稱交給 Model，確保導覽列名字還在
+	    
 	    String nickname = (String) session.getAttribute("nickname");
 	    if (nickname != null) {
 	        model.addAttribute("nickname", nickname);
 	    }
-
-	    model.addAttribute("reservations", reservationList);
+	    List<Reservation> dbReservations = reservationRepository.findAll();
+	    model.addAttribute("reservations", dbReservations);
 	    return "my-reservations"; 
 	}
 	
 	@GetMapping("/delete-reservation/{index}")
 	public String deleteReservation(@PathVariable int index) {
-	    // 檢查索引是否合法，然後刪除
+	   
 	    if (index >= 0 && index < reservationList.size()) {
 	        reservationList.remove(index);
 	    }
-	    // 刪除後回到預約清單頁面
+	   
 	    return "redirect:/my-reservations";
 	}
 	
@@ -228,21 +230,21 @@ public class CarController {
 	                        HttpSession session, 
 	                        Model model) {
 	    
-	    // 1. 處理 Session
+	   
 	    String nickname = (String) session.getAttribute("nickname");
 	    if (nickname != null) {
 	        model.addAttribute("nickname", nickname);
 	    }
 
-	    // 2. 處理車輛清單與搜尋邏輯 (核心修改處)
+	    
 	    List<Car> filteredCars;
 
 	    if (keyword != null && !keyword.trim().isEmpty()) {
-	        // ✨ 直接呼叫資料庫進行過濾
+	       
 	        filteredCars = carRepository.findByNameContainingIgnoreCase(keyword);
 	        model.addAttribute("message", "您搜尋的關鍵字是：「" + keyword + "」");
 	    } else {
-	        // ✨ 直接呼叫資料庫撈出全部
+	     
 	        filteredCars = carRepository.findAll();
 	        
 	        if (nickname == null) {
@@ -259,13 +261,13 @@ public class CarController {
 	
 	@GetMapping("/logout")
 	public String logout(HttpSession session) {
-	    session.invalidate(); // 燒掉置物櫃，清除所有資料
+	    session.invalidate(); 
 	    return "redirect:/index";
 	}
 	
 	@GetMapping("/forgot-password")
 	public String showForgotPasswordPage() {
-	    return "forgot-password"; // 對應 forgot-password.html
+	    return "forgot-password"; 
 	}
 	
 	@PostMapping("/reset-password")
@@ -274,7 +276,7 @@ public class CarController {
 	                                  @RequestParam String newPassword, 
 	                                  Model model) {
 	    
-	    // ✨ 新增：驗證新密碼是否符合 8 位數字格式
+	    
 	    if (newPassword == null || !newPassword.matches("\\d{8}")) {
 	        System.out.println("❌ 格式檢查失敗：新密碼不符合 8 位數字規則。");
 	        model.addAttribute("message", "❌ 重設失敗：新密碼必須是 8 位數字！");
@@ -290,7 +292,7 @@ public class CarController {
 	    if (user != null) {
 	        System.out.println("資料庫裡的人名: [" + user.getName() + "]");
 	        
-	        // 使用 .trim() 處理名字，防止因為使用者不小心輸入多餘空白而導致比對失敗
+	        
 	        if (user.getName().trim().equals(name.trim())) {
 	            user.setPassword(newPassword); 
 	            userRepository.save(user); 
@@ -314,21 +316,39 @@ public class CarController {
 	                                @RequestParam String date, 
 	                                Model model) {
 	    
-	    // 將字串日期轉換為 LocalDate 物件
+	    
 	    LocalDate selectedDate = LocalDate.parse(date);
 	    LocalDate today = LocalDate.now();
 
-	    // ✨ 檢查預約日期是否在今天之前
+	    
 	    if (selectedDate.isBefore(today)) {
 	        model.addAttribute("message", "❌ 預約失敗：日期不能選擇過去的時間！");
-	        // 重新讀取車輛列表以顯示頁面
+	        
 	        model.addAttribute("allCars", getFullCarList());
 	        return "reserve";
 	    }
 
-	    // ... 執行原本的存檔邏輯 ...
+	    
 	    System.out.println("✅ 預約成功：[" + name + "] 預約了 [" + carName + "] 於 " + date);
 	    model.addAttribute("message", "🎉 預約成功！我們將會致電與您確認。");
 	    return "index";
+	}
+	
+	@PostMapping("/reserve")
+	public String submitReservation(@ModelAttribute("reservation") Reservation reservation, 
+	                                HttpSession session, 
+	                                Model model) {
+	    
+	    
+	    if (session.getAttribute("user") == null) {
+	        return "redirect:/login";
+	    }
+
+	    
+	    reservationRepository.save(reservation);
+	    
+	  
+	    System.out.println("成功儲存預約！預約人：" + reservation.getCustomerName());
+	    return "redirect:/index"; 
 	}
 }

@@ -1,8 +1,11 @@
 package com.example.demo;
 
+import com.example.demo.User;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
 
+@Repository
 public interface UserRepository extends JpaRepository<User, String> {
-    // Spring 會自動幫你實作透過 Email 找人的功能
+    
     User findByEmail(String email);
 }

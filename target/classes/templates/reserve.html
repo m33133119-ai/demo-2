@@ -10,32 +10,37 @@
         <div class="max-w-md mx-auto bg-white rounded-xl shadow-lg p-8">
             <h2 class="text-2xl font-bold mb-6">預約賞車服務</h2>
             
-            <form action="/submit-reserve" method="post" class="space-y-4">
+            <!-- ✅ 修改一：action 從 /submit-reserve 改成 /reserve，並加上 th:object -->
+            <form th:action="@{/reserve}" th:object="${reservation}" method="post" class="space-y-4">
+                
                 <div>
                     <label class="block text-sm font-medium mb-1">您的姓名</label>
-                    <input type="text" name="customerName" required class="w-full border p-2 rounded">
+                    <!-- ✅ 修改二：name="customerName" 改成 th:field="*{customerName}" -->
+                    <input type="text" th:field="*{customerName}" required class="w-full border p-2 rounded">
                 </div>
                 
-				<div>
-				    <label class="block text-sm font-medium mb-1 text-gray-700">選擇預約車款</label>
-				    <select name="carName" required class="w-full border p-2 rounded bg-white focus:ring-2 focus:ring-blue-500 outline-none">
-				        <option value="">-- 請選擇車款 --</option>
-				        
-				        <option th:each="car : ${allCars}" 
-				                th:value="${car.name}" 
-				                th:text="${car.name}"
-				                th:selected="${car.name == selectedCar}"> 車名載入中...
-				        </option>
-				    </select>
-				    <p class="text-xs text-gray-400 mt-1">※ 您也可以在此切換其他感興趣的車款</p>
-				</div>
+                <div>
+                    <label class="block text-sm font-medium mb-1 text-gray-700">選擇預約車款</label>
+                    <!-- ✅ 修改三：name="carName" 改成 th:field="*{carName}" -->
+                    <select th:field="*{carName}" required class="w-full border p-2 rounded bg-white focus:ring-2 focus:ring-blue-500 outline-none">
+                        <option value="">-- 請選擇車款 --</option>
+                        <option th:each="car : ${allCars}" 
+                                th:value="${car.name}" 
+                                th:text="${car.name}"
+                                th:selected="${car.name == selectedCar}">
+                            車名載入中...
+                        </option>
+                    </select>
+                    <p class="text-xs text-gray-400 mt-1">※ 您也可以在此切換其他感興趣的車款</p>
+                </div>
                 
-				<div>
-				    <label class="block text-sm font-medium text-gray-700 mb-1">預約日期</label>
-				    <input type="date" name="date" required 
-				           th:min="${#temporals.format(#temporals.createNow(), 'yyyy-MM-dd')}"
-				           class="w-full border border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition">
-				</div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">預約日期</label>
+                    <!-- ✅ 修改四：name="date" 改成 th:field="*{date}" -->
+                    <input type="date" th:field="*{date}" required 
+                           th:min="${#temporals.format(#temporals.createNow(), 'yyyy-MM-dd')}"
+                           class="w-full border border-gray-300 p-3 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition">
+                </div>
                 
                 <button type="submit" class="w-full bg-blue-600 text-white py-3 rounded-lg font-bold hover:bg-blue-700 transition">
                     確認預約

@@ -20,7 +20,7 @@ public class User {
         this.password = password;
     }
 
-    // --- 以下是 Getter 和 Setter (可用右鍵 -> Source -> Generate 生成) ---
+    
     public String getEmail() { return email; }
     public void setEmail(String email) { this.email = email; }
     public String getName() { return name; }
