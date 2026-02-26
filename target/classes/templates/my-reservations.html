@@ -51,11 +51,11 @@
 					        </td>
 					        
 					        <td class="px-8 py-5">
-					            <a th:href="@{/delete-reservation/{idx}(idx=${iterStat.index})}" 
-					               class="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-red-700 bg-red-100 hover:bg-red-200 focus:outline-none transition"
-					               onclick="return confirm('確定要取消這筆賞車預約嗎？')">
-					                <i class="fas fa-trash-alt mr-2"></i> 取消預約
-					            </a>
+								<a th:href="@{/delete-reservation/{id}(id=${res.id})}" 
+								   class="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-red-700 bg-red-100 hover:bg-red-200 focus:outline-none transition"
+								   onclick="return confirm('確定要取消這筆賞車預約嗎？')">
+								    <i class="fas fa-trash-alt mr-2"></i> 取消預約
+								</a>
 					        </td>
 					    </tr>
 

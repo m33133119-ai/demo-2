@@ -245,16 +245,13 @@ public class CarController {
 	}
 	
 	// 刪除特定一筆預約紀錄
-	@GetMapping("/delete-reservation/{index}")        // {index} 是一個路徑變數，代表要刪除第幾筆資料
-	public String deleteReservation(@PathVariable int index) {   // @PathVariable 會自動把網址後方的數字抓下來，傳進變數 index 中
+	@GetMapping("/delete-reservation/{id}")        // 確保這裡是接收資料庫的 ID
+	public String deleteReservation(@PathVariable Long id) {   // @PathVariable 會自動把網址後方的數字抓下來，傳進變數 index 中
 	   
-		// 檢查 index 是否在有效範圍內（避免刪除不存在的編號導致程式出錯）
-	    if (index >= 0 && index < reservationList.size()) {
-	    	
-	    	// 從記憶體清單 (reservationList) 中移除該筆資料
-	        reservationList.remove(index);
-	    }
+		// 直接呼叫 repository 從資料庫中刪除這筆 ID 對應的資料
+	    reservationRepository.deleteById(id);
 	   
+	    // 刪除後重新導向，這時 showMyReservations 會重新從資料庫撈取「最新」清單
 	    return "redirect:/my-reservations";
 	}
 	
