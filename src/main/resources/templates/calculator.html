@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="zh-Hant" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>貸款試算 - 卓越中古車</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body class="bg-gray-50 text-gray-800">
+
+<!-- 導覽列 (複製自 car.html) -->
+<nav class="bg-white shadow-md sticky top-0 z-50">
+    <div class="container mx-auto px-6 py-4 flex justify-between items-center">
+        <a th:href="@{/index}" class="text-2xl font-bold text-blue-600">
+            <i class="fas fa-car-side mr-2"></i>卓越中古車
+        </a>
+    </div>
+</nav>
+
+<!-- 主容器 -->
+<div class="container mx-auto py-20 px-6 max-w-2xl">
+    <h1 class="text-4xl font-bold mb-2 text-center">🏦 貸款試算機</h1>
+    <p class="text-center text-gray-600 mb-10">輸入購車資訊，輕鬆計算月付金與總利息</p>
+
+    <div class="bg-white p-10 rounded-2xl shadow-lg">
+        
+        <!-- 購車價格 -->
+        <div class="mb-8">
+            <label class="block text-lg font-semibold mb-2">
+                <i class="fas fa-tag text-blue-600 mr-2"></i>購車價格
+            </label>
+            <div class="flex items-center">
+                <span class="mr-2 text-gray-600">$</span>
+                <input type="number" id="carPrice" value="800000" min="100000" step="10000" 
+                       class="flex-1 px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-blue-600 focus:outline-none text-lg">
+                <span class="ml-2 text-gray-600">元</span>
+            </div>
+            <input type="range" id="priceSilver" min="100000" max="3000000" step="10000" value="800000" 
+                   class="w-full mt-3 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer">
+        </div>
+
+        <!-- 頭期款 -->
+        <div class="mb-8">
+            <label class="block text-lg font-semibold mb-2">
+                <i class="fas fa-wallet text-blue-600 mr-2"></i>頭期款 (百分比)
+            </label>
+            <div class="flex items-center gap-4">
+                <select id="downPaymentPercent" class="flex-1 px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-blue-600 text-lg">
+                    <option value="10">10% (低頭期)</option>
+                    <option value="20" selected>20% (推薦)</option>
+                    <option value="30">30%</option>
+                    <option value="50">50%</option>
+                </select>
+            </div>
+            <p class="mt-2 text-sm text-gray-600">頭期款：<span id="downPaymentAmount" class="font-bold text-blue-600">$160,000</span></p>
+        </div>
+
+        <!-- 貸款期數 -->
+        <div class="mb-8">
+            <label class="block text-lg font-semibold mb-2">
+                <i class="fas fa-calendar-alt text-blue-600 mr-2"></i>貸款期數
+            </label>
+            <select id="loanMonths" class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-blue-600 text-lg">
+                <option value="24">24 個月 (2 年)</option>
+                <option value="36" selected>36 個月 (3 年)</option>
+                <option value="48">48 個月 (4 年)</option>
+                <option value="60">60 個月 (5 年)</option>
+                <option value="72">72 個月 (6 年)</option>
+            </select>
+        </div>
+
+        <!-- 利率 -->
+        <div class="mb-8">
+            <label class="block text-lg font-semibold mb-2">
+                <i class="fas fa-percent text-blue-600 mr-2"></i>年利率 (%)
+            </label>
+            <div class="flex items-center gap-4">
+                <input type="number" id="interestRate" value="3.5" min="0" max="10" step="0.1" 
+                       class="flex-1 px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-blue-600 text-lg">
+                <span class="text-gray-600">%</span>
+            </div>
+            <p class="mt-2 text-xs text-gray-500">💡 目前市場平均利率約 3-5%，依銀行與信用評分調整</p>
+        </div>
+
+        <!-- 計算按鈕 -->
+        <button onclick="calculateLoan()" 
+                class="w-full bg-blue-600 text-white py-4 rounded-lg font-bold text-lg hover:bg-blue-700 transition mb-8">
+            <i class="fas fa-calculator mr-2"></i>計算月付金
+        </button>
+
+        <!-- 計算結果 -->
+        <div id="result" class="hidden bg-gradient-to-r from-blue-50 to-green-50 p-8 rounded-xl border-2 border-blue-200">
+            <h2 class="text-2xl font-bold mb-6 text-blue-800">💰 試算結果</h2>
+            
+            <div class="grid grid-cols-2 gap-4 mb-6">
+                <div class="bg-white p-4 rounded-lg shadow-sm">
+                    <p class="text-gray-600 text-sm">貸款金額</p>
+                    <p class="text-xl font-bold text-blue-600" id="loanAmount">$640,000</p>
+                </div>
+                <div class="bg-white p-4 rounded-lg shadow-sm">
+                    <p class="text-gray-600 text-sm">每月月付金</p>
+                    <p class="text-2xl font-bold text-green-600" id="monthlyPayment">$18,000</p>
+                </div>
+                <div class="bg-white p-4 rounded-lg shadow-sm">
+                    <p class="text-gray-600 text-sm">總利息費用</p>
+                    <p class="text-xl font-bold text-red-500" id="totalInterest">$15,000</p>
+                </div>
+                <div class="bg-white p-4 rounded-lg shadow-sm">
+                    <p class="text-gray-600 text-sm">總費用</p>
+                    <p class="text-xl font-bold text-gray-800" id="totalAmount">$655,000</p>
+                </div>
+            </div>
+
+            <p class="text-xs text-gray-500 text-center">
+                ⚠️ 此試算結果僅供參考，實際月付金可能因銀行政策、徵信結果而異。詳細內容請洽詢業務。
+            </p>
+        </div>
+
+    </div>
+
+    <!-- 回到首頁 -->
+    <div class="text-center mt-10">
+        <a th:href="@{/index}" class="text-blue-500 hover:underline">
+            <i class="fas fa-arrow-left mr-2"></i>回到首頁
+        </a>
+    </div>
+</div>
+
+<script>
+    // 當價格滑塊改變時，同步更新輸入框
+    document.getElementById('priceSilver').addEventListener('input', function() {
+        document.getElementById('carPrice').value = this.value;
+        updateDownPayment();
+    });
+
+    // 當價格輸入改變時，同步更新滑塊
+    document.getElementById('carPrice').addEventListener('input', function() {
+        document.getElementById('priceSilver').value = this.value;
+        updateDownPayment();
+    });
+
+    // 當頭期款百分比改變時，更新顯示
+    document.getElementById('downPaymentPercent').addEventListener('change', updateDownPayment);
+
+    function updateDownPayment() {
+        const carPrice = parseInt(document.getElementById('carPrice').value) || 0;
+        const percent = parseInt(document.getElementById('downPaymentPercent').value);
+        const downPayment = Math.round(carPrice * percent / 100);
+        document.getElementById('downPaymentAmount').innerText = '$' + downPayment.toLocaleString();
+    }
+
+    function calculateLoan() {
+        // 取得輸入值
+        const carPrice = parseInt(document.getElementById('carPrice').value) || 0;
+        const downPaymentPercent = parseInt(document.getElementById('downPaymentPercent').value);
+        const loanMonths = parseInt(document.getElementById('loanMonths').value);
+        const yearlyRate = parseFloat(document.getElementById('interestRate').value) || 0;
+
+        // 計算貸款金額
+        const downPayment = Math.round(carPrice * downPaymentPercent / 100);
+        const loanAmount = carPrice - downPayment;
+
+        // 計算月利率與月付金 (本利攤還法)
+        const monthlyRate = yearlyRate / 100 / 12;
+        const monthlyPayment = loanAmount * 
+            (monthlyRate * Math.pow(1 + monthlyRate, loanMonths)) / 
+            (Math.pow(1 + monthlyRate, loanMonths) - 1);
+
+        // 計算總金額與利息
+        const totalAmount = monthlyPayment * loanMonths;
+        const totalInterest = totalAmount - loanAmount;
+
+        // 顯示結果
+        document.getElementById('loanAmount').innerText = '$' + Math.round(loanAmount).toLocaleString();
+        document.getElementById('monthlyPayment').innerText = '$' + Math.round(monthlyPayment).toLocaleString();
+        document.getElementById('totalInterest').innerText = '$' + Math.round(totalInterest).toLocaleString();
+        document.getElementById('totalAmount').innerText = '$' + Math.round(totalAmount).toLocaleString();
+        
+        document.getElementById('result').classList.remove('hidden');
+    }
+
+    // 初始化：顯示初始計算結果
+    calculateLoan();
+    updateDownPayment();
+</script>
+
+</body>
+</html>

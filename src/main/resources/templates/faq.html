@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="zh-Hant" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>常見問題 - 卓越中古車</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-50">
+    <div class="container mx-auto py-20 px-6 max-w-3xl">
+        <h1 class="text-3xl font-bold mb-10 text-center">常見問題 FAQ</h1>
+        
+        <div class="space-y-6">
+            <div class="bg-white p-6 rounded-lg shadow">
+                <h3 class="font-bold text-lg text-blue-600">Q1: 買車可以貸款嗎？</h3>
+                <p class="mt-2 text-gray-600">A: 我們與多家銀行合作，提供超低利率貸款方案，最快 24 小時撥款。</p>
+            </div>
+            
+            <div class="bg-white p-6 rounded-lg shadow">
+                <h3 class="font-bold text-lg text-blue-600">Q2: 每一台車都有鑑定報告嗎？</h3>
+                <p class="mt-2 text-gray-600">A: 是的，所有車輛皆經過 180 項專業檢驗，並附上完整第三方鑑定證書。</p>
+            </div>
+        </div>
+
+        <div class="mt-10 text-center">
+            <a th:href="@{/index}" class="text-blue-500 hover:underline">← 回到首頁</a>
+        </div>
+    </div>
+</body>
+</html>
