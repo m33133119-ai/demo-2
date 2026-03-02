@@ -1,14 +1,15 @@
-package com.example.demo;
+package com.example.demo; //自動初始化資料庫H2
 
-import org.springframework.boot.CommandLineRunner;
-import org.springframework.stereotype.Component;
+import org.springframework.boot.CommandLineRunner; // 匯入啟動後執行的介面
+import org.springframework.stereotype.Component; // 匯入組件註解
 import java.util.Arrays;
 import org.springframework.beans.factory.annotation.Autowired;
 
-@Component
+@Component // 告訴 Spring：這是一個功能組件，請在啟動時自動掃描並載入它
 public class DataInitializer implements CommandLineRunner {
-
-    @Autowired
+	// 繼承 CommandLineRunner，這代表程式「一啟動完成」就會立刻執行裡面的內容
+	
+    @Autowired // 自動注入：讓 Spring 幫你把剛剛寫好的 CarRepository 實例抓過來使用
     private CarRepository carRepository;
 
     @Override
@@ -16,7 +17,7 @@ public class DataInitializer implements CommandLineRunner {
         // 先清空資料庫，確保每次重啟都是乾淨的狀態
         carRepository.deleteAll();
 
-        // 加入你原本的那四台車
+        //新增預設資料
         carRepository.save(new Car(null, "BMW 3-Series Sedan", "$1,480,000", "2021", "/images/Bmw3.jpg", 
                 "2.0L 汽油", "手自排", 25000, Arrays.asList("天窗", "感應尾門", "ACC自適應巡航")));
 
