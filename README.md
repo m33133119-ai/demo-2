@@ -5,7 +5,7 @@
 ## 🚀 技術
 - **後端**: Java 1.8, Spring Boot, Spring Data JPA
 - **前端**: Thymeleaf 模板引擎, HTML/CSS (Bootstrap)
-- **資料庫**: H2 Database / MySQL
+- **資料庫**: H2 Database 
 - **工具**: Eclipse IDE, Maven, Git/GitHub
 
 ## 🌟 主要功能 
