@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>上架新車款</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 p-10">
+    <div class="max-w-md mx-auto bg-white p-8 rounded shadow">
+        <h2 class="text-2xl font-bold mb-6">填寫車輛資訊</h2>
+        <form th:action="@{/save-car}" th:object="${car}" method="post">
+            <div class="mb-4">
+                <label class="block mb-2">車名：</label>
+                <input type="text" th:field="*{name}" class="w-full border p-2 rounded" placeholder="例如：BMW M4">
+            </div>
+            <button type="submit" class="w-full bg-green-600 text-white py-2 rounded hover:bg-green-700">確認上架</button>
+        </form>
+    </div>
+</body>
+</html>

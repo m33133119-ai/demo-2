@@ -305,6 +305,12 @@ public class CarController {
 	    return "car"; 
 	}
 	
+	@PostMapping("/delete-car/{id}")
+	public String deleteCar(@PathVariable Long id) {
+	    carRepository.deleteById(id); // 從資料庫移除該 ID 的車
+	    return "redirect:/show-cars"; // 刪除完成後，重新整理回到首頁
+	}
+	
 	@GetMapping("/logout")   // 當使用者點擊「登出」按鈕時觸發
 	public String logout(HttpSession session) {
 	    session.invalidate(); 
@@ -406,7 +412,21 @@ public class CarController {
 	
 	@GetMapping("/calculator")
 	public String showCalculator() {
-	    return "calculator"; // 這裡要對應你的 calculator.html 檔名
+	    return "calculator"; // 這裡對應calculator.html 檔名
+	}
+	
+	@GetMapping("/show-cars")
+    public String listCars(Model model) {
+        // 從 MariaDB 抓取所有汽車
+        model.addAttribute("cars", carRepository.findAll());
+        return "car"; // 對應到 car-list.html
+    }
+	
+	@GetMapping("/add-car")
+	public String showAddCarForm(Model model) {
+	    // 建立一個空的 Car 物件給表單綁定資料
+	    model.addAttribute("car", new Car()); 
+	    return "add-car"; // 這會叫 Spring Boot 去找 templates/add-car.html
 	}
 
 	

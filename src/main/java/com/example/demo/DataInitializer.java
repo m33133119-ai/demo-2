@@ -30,6 +30,6 @@ public class DataInitializer implements CommandLineRunner {
         carRepository.save(new Car(null, "Porsche 911", "$5,200,000", "2023", "/images/porche.jpg", 
                 "3.0L 汽油", "PDK雙離合", 3500, Arrays.asList("跑車排氣", "PDLS頭燈", "真皮內裝")));
 
-        System.out.println("--- H2 資料庫初始化完成，已更新為 4 台車 ---");
+        System.out.println("--- 已成功初始化 MariaDB 資料庫汽車範例資料！ ---");
     }
 }
