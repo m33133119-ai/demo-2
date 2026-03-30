@@ -14,7 +14,10 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import javax.annotation.PostConstruct;
-
+import org.springframework.security.access.prepost.PreAuthorize;
+import java.security.Principal;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+import javax.servlet.http.HttpServletRequest;
 
 @Controller
 public class CarController {
@@ -32,20 +35,10 @@ public class CarController {
 
 	
 	@GetMapping("/sell")       //登入管理:必須先登入才能賣車
-	public String showSellPage(HttpSession session, Model model) {
-	    
-	    if (session.getAttribute("user") == null) {
-	        
-	        model.addAttribute("message", "🔒 請先登入帳號，才能提交賣車申請！");
-	        return "login"; 
-	    }                                                   
-
-	   
-	    String nickname = (String) session.getAttribute("nickname");
-	    model.addAttribute("nickname", nickname);
-	    
+	public String showSellPage() {
+	    // 交給 Spring Security 保護，這裡只要單純回傳 HTML 檔名即可
 	    return "sell"; 
-	}                                                      
+	}                                                  
 
 	@PostMapping("/submit-car")      //登入管理:登入後跳轉到賣車業面
 	public String handleSellForm(
@@ -55,45 +48,42 @@ public class CarController {
 	        @RequestParam String phone, 
 	        Model model) { 
 
+	    System.out.println("收到賣車申請：" + name + "，電話：" + phone); 
+	    Car newCar = new Car();                                         
+	    newCar.setName(name);
+	    newCar.setYear(year);
+	    newCar.setPrice(price);
 	    
-	    System.out.println("收到賣車申請：" + name + "，電話：" + phone); //後台確認表單存入
-	    Car newCar = new Car();                                         //賣車表單處理
-        newCar.setName(name);
-        newCar.setYear(year);
-        newCar.setPrice(price);
-        carRepository.save(newCar);      //保存資料
-	   
-        model.addAttribute("cars", carRepository.findAll());//重新去資料庫撈出「目前所有車輛」的最新清單
-                                                           
-        
-        model.addAttribute("message", "✅ 提交成功！我們已收到您的「" + name + "」賣車申請，專員將盡快聯絡。");
+	    // 🚨 新增這行：將客人提交的車輛強制標記為「待審核」
+	    newCar.setStatus("待審核");
+	    System.out.println("【偵錯】準備存入資料庫，這台車的狀態目前是：" + newCar.getStatus());
+
+	    carRepository.save(newCar);      //保存資料
 	    
+	    // 🚨 這裡也要改！改成只撈取「已上架」的車，才不會把剛提交的待審核車輛也顯示出來
+	    model.addAttribute("cars", carRepository.findByStatus("已上架")); 
+	                                                       
+	    model.addAttribute("message", "✅ 提交成功！我們已收到您的「" + name + "」賣車申請，專員將盡快聯絡。");
 	    
 	    return "car"; 
-	}                                                     
+	}                                                   
 	
 	@GetMapping("/reserve")   //登入成功才能預約
-	public String showReservePage(@RequestParam(name = "carName", required = false) String carName, 
-	                             HttpSession session,     // ✨ 注入 Session 進行檢查
-	                             Model model) {
+	public String showReservePage(Model model, @RequestParam(required = false) String carName) {
 	    
+	    // 1. 準備一個空的預約物件，給 Thymeleaf 表單裝資料用
+	    Reservation reservation = new Reservation(); 
 	    
-	    if (session.getAttribute("user") == null) {
-	       
-	        model.addAttribute("message", "🔒 請先登入帳號，才能預約賞車！");
-	        return "login"; 
-	    }                                                 
-
+	    // 2. 如果網址有傳遞車名過來 (例如從首頁點擊預約賞車)，就自動填入車名
+	    if (carName != null) {
+	        reservation.setCarName(carName); 
+	    }
 	    
-	    List<Car> allCars = carRepository.findAll();//預約車輛功能(準備表單)
-	    String nickname = (String) session.getAttribute("nickname"); //預約右上角顯示名字
-	    
-	    model.addAttribute("allCars", allCars);
-	    model.addAttribute("nickname", nickname);             // 讓預約頁面的導覽列也能顯示名字
-	    model.addAttribute("selectedCar", carName);
-	    model.addAttribute("reservation", new Reservation());//預建一個空的預約單物件
-	    return "reserve"; 
-	}                                                       
+	    // 3. 把這個物件命名為 "reservation" 傳給前端網頁，解決 500 錯誤！
+	    model.addAttribute("reservation", reservation); 
+	    model.addAttribute("cars", carRepository.findByStatus("已上架"));
+	    return "reserve";
+	}                                                
 	
 
 	
@@ -168,39 +158,6 @@ public class CarController {
 	    model.addAttribute("message", "🎉 註冊成功！密碼格式正確。請登入。");     // 註冊成功後，帶著成功訊息導向「登入頁面」
 	    return "login"; 
 	}
-
-    
-	@PostMapping("/login")//處理登入驗證
-	public String handleLogin(@RequestParam String username,    // 接收表單傳來的 Email
-	                          @RequestParam String password,    // 接收表單傳來的密碼
-	                          HttpSession session,              // 用於存儲使用者狀態
-	                          Model model) {
-	    
-	    
-	    if (!password.matches("\\d{8}")) {
-	        model.addAttribute("message", "❌ 格式錯誤：請輸入 8 位數字密碼！");
-	        return "login";
-	    }
-
-	                                                     
-	    User user = userRepository.findByEmail(username); //使用 Repository 透過 Email 查詢資料庫中的使用者
-
-	                                                     
-	    if (user != null && user.getPassword().equals(password)) {//如果找到了人 (user != null) 且 資料庫裡的密碼跟輸入的一模一樣
-	        session.setAttribute("nickname", user.getName());
-	        session.setAttribute("user", user);
-	        
-	        model.addAttribute("cars", carRepository.findAll());  // 準備首頁要看的車子清單
-	        return "car"; 
-	    } else {
-	    	                                                      
-	        model.addAttribute("message", "❌ 帳號不存在或密碼錯誤！");// 失敗：帳號不存在或密碼比對失敗
-	        return "login";
-	    }
-	}
-
-	
-	
 	                               
 	@PostConstruct
 	public void initData() { // 在 Controller 啟動時檢查資料庫是否為空
@@ -275,7 +232,7 @@ public class CarController {
 	        allCars = carRepository.findByNameContainingIgnoreCase(keyword);
 	        model.addAttribute("message", "您搜尋的關鍵字是：「" + keyword + "」");
 	    } else {
-	        allCars = carRepository.findAll();
+	    	allCars = carRepository.findByStatus("已上架");
 	    }
 	        
 	     
@@ -389,21 +346,24 @@ public class CarController {
 	
 	@PostMapping("/reserve") //處理預約表單提交並存入資料庫
 	public String submitReservation(@ModelAttribute("reservation") Reservation reservation, 
-	                                HttpSession session, // 用於檢查使用者是否已登入
-	                                Model model) {
-	    
-	    
-	    if (session.getAttribute("user") == null) { //// 未登入者強制導向至登入頁面，保護預約功能不被匿名使用
-	        return "redirect:/login";
-	    }
+            Principal principal, // 🚨 改用 Spring Security 的 Principal 憑證
+            RedirectAttributes redirectAttributes) { // 用來跨網頁傳遞成功訊息
 
-	    //資料持久化 (存入資料庫)
-	    reservationRepository.save(reservation);
-	    
-	  
-	    System.out.println("成功儲存預約！預約人：" + reservation.getCustomerName());
-	    return "redirect:/index"; 
-	}
+    // 1. 檢查是否登入 (如果 principal 是空的，代表 Spring Security 說他沒登入)
+     if (principal == null) { 
+     return "redirect:/login";
+        }
+
+    // 2. 資料持久化 (存入資料庫)
+     reservationRepository.save(reservation);
+
+     System.out.println("成功儲存預約！預約車款：" + reservation.getCarName() + "，預約人：" + reservation.getCustomerName());
+
+    // 3. 帶著成功提示訊息跳轉回首頁
+     redirectAttributes.addFlashAttribute("message", "🎉 預約成功！我們將會致電與您確認。");
+
+     return "redirect:/index"; 
+       }
 	
 	@GetMapping("/faq") //常見問題功能
 	public String showFaqPage() {
@@ -418,16 +378,37 @@ public class CarController {
 	@GetMapping("/show-cars")
     public String listCars(Model model) {
         // 從 MariaDB 抓取所有汽車
-        model.addAttribute("cars", carRepository.findAll());
+		model.addAttribute("cars", carRepository.findByStatus("已上架"));
         return "car"; // 對應到 car-list.html
     }
 	
-	@GetMapping("/add-car")
-	public String showAddCarForm(Model model) {
-	    // 建立一個空的 Car 物件給表單綁定資料
-	    model.addAttribute("car", new Car()); 
-	    return "add-car"; // 這會叫 Spring Boot 去找 templates/add-car.html
+	// 顯示上架頁面
+	@GetMapping("/car/add")
+        public String showAddForm(HttpServletRequest request, Model model) {
+	    
+	    // 1. 改用 Spring Security 的方式檢查：是否未登入？ 或者 角色不是 ADMIN？
+	    if (request.getUserPrincipal() == null || !request.isUserInRole("ADMIN")) {
+	        model.addAttribute("message", "🔒 權限不足：只有管理員可以上架車輛！");
+	        return "login"; 
+	    }
+
+	    model.addAttribute("car", new Car());
+	    return "add-car"; 
 	}
 
-	
+	// 執行上架儲存
+	@PostMapping("/car/save")
+        public String saveCar(HttpServletRequest request, @ModelAttribute("car") Car car) {
+	    
+	    // 1. 儲存前一樣要阻擋駭客，檢查身分
+	    if (request.getUserPrincipal() == null || !request.isUserInRole("ADMIN")) {
+	        return "redirect:/login";
+	    }
+	    
+	    // 🚨 2. 關鍵細節：既然是管理員親手新增的車，狀態要直接給「已上架」！
+	    car.setStatus("已上架"); 
+	    
+	    carRepository.save(car);
+	    return "redirect:/"; // 儲存成功回首頁
+	}
 }

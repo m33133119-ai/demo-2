@@ -1,4 +1,4 @@
-package com.example.demo; //在資料庫（H2）裡面幫我建立一張名為 Reservation 的表格，並按照我定義的欄位來存資料。
+package com.example.demo; //在資料庫裡面幫我建立一張名為 Reservation 的表格，並按照我定義的欄位來存資料。
 
 import javax.persistence.Entity; // 匯入實體註解，用來對應資料庫表格
 import javax.persistence.GeneratedValue;// 匯入自動產生值的註解

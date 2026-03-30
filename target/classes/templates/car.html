@@ -1,5 +1,7 @@
 <!DOCTYPE html>
-<html lang="zh-Hant" xmlns:th="http://www.thymeleaf.org">
+<html lang="zh-Hant" 
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -8,6 +10,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
 <body class="bg-gray-50 text-gray-800">
+	
 	
 	<nav class="bg-white shadow-md sticky top-0 z-50">
 	    <div class="container mx-auto px-6 py-4 flex justify-between items-center relative">
@@ -19,30 +22,38 @@
 	        <div class="hidden md:flex absolute left-1/2 transform -translate-x-1/2 space-x-12 font-medium">
 	            <a th:href="@{/index}" class="hover:text-blue-600 transition">所有車輛</a>
 	            <a th:href="@{/sell}" class="hover:text-blue-600 transition">我要賣車</a>
-				<a th:href="@{/add-car}" class="text-green-600 font-bold hover:text-green-700 transition">
-				    <i class="fas fa-plus-circle mr-1"></i>上架車款
-				</a>
+				<li class="nav-item" sec:authorize="hasRole('ADMIN')">
+				    <a class="nav-link" href="/car/add">
+				        <i class="fas fa-plus-circle"></i> 上架車款
+				    </a>
+				</li>
 	            <a th:href="@{/reserve}" class="hover:text-blue-600 transition">預約賞車</a>
 	            <a href="#about-us" class="hover:text-blue-600 transition">關於我們</a>
 	        </div>
 
-	        <div class="flex items-center space-x-4 z-10">
-	            <div th:if="${session.nickname != null}" class="flex items-center space-x-4">
-	                <a th:href="@{/my-reservations}" 
-	                   class="bg-gray-100 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-200 transition flex items-center text-sm font-medium">
-	                    <i class="fas fa-list-ul mr-2 text-blue-600"></i>我的預約
-	                </a>
-	                <span class="font-medium text-gray-700">
-	                    Hi, <span th:text="${session.nickname}">使用者</span>
-	                </span>
-	                <a th:href="@{/logout}" class="text-sm text-red-500 hover:underline">登出</a>
-	            </div>
+			<div class="flex items-center space-x-4 z-10">
+			    
+			    <div sec:authorize="isAuthenticated()" class="flex items-center space-x-4">
+			        <a th:href="@{/my-reservations}" 
+			           class="bg-gray-100 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-200 transition flex items-center text-sm font-medium">
+			            <i class="fas fa-list-ul mr-2 text-blue-600"></i>我的預約
+			        </a>
+			        <span class="font-medium text-gray-700">
+			            Hi, <span sec:authentication="principal.fullName" class="text-blue-600 font-bold"></span>
+			        </span>
+			        
+			        <form th:action="@{/logout}" method="post" class="m-0">
+			            <button type="submit" class="text-sm text-red-500 hover:underline bg-transparent border-none cursor-pointer">
+			                登出
+			            </button>
+			        </form>
+			    </div>
 
-	            <a th:if="${session.nickname == null}" th:href="@{/login}" 
-	               class="bg-blue-600 text-white px-5 py-2 rounded-full hover:bg-blue-700 transition inline-block">
-	                登入 / 註冊
-	            </a>
-	        </div>
+			    <a sec:authorize="isAnonymous()" th:href="@{/login}" 
+			       class="bg-blue-600 text-white px-5 py-2 rounded-full hover:bg-blue-700 transition inline-block">
+			        登入 / 註冊
+			    </a>
+			</div>
 	            
 	    </div>
 	</nav>
@@ -100,11 +111,10 @@
 				        </a>
 				    </div>
 					
-					<div class="mt-2">
+					<div class="mt-2" sec:authorize="hasRole('ADMIN')">
 					    <form th:action="@{'/delete-car/' + ${c.id}}" method="post" 
 					          onsubmit="return confirm('確定要將這台「' + [[${c.name}]] + '」永久下架嗎？');">
-					        <button type="submit" 
-					                class="w-full border border-red-200 text-red-500 py-1.5 rounded text-sm font-medium hover:bg-red-50 hover:border-red-500 transition">
+					        <button type="submit" ...>
 					            <i class="fas fa-trash-alt mr-1"></i> 下架此車款
 					        </button>
 					    </form>
@@ -123,33 +133,33 @@
 	<section id="about-us" class="bg-white py-20 px-6">
 	    <div class="container mx-auto">
 	        <div class="text-center mb-16">
-	            <h2 class="text-3xl font-bold mb-4">核心價值：創新服務，移動無憂</h2>
-	            <p class="text-gray-600 max-w-2xl mx-auto">我們不只是在賣車，是在為您建構一個無後顧之憂的移動生活。透過數位技術，讓購車流程變得優雅且透明。</p>
+	            <h2 class="text-3xl font-bold mb-4">關於卓越中古車</h2>
+	            <p class="text-gray-600 max-w-2xl mx-auto">我們致力於提供最優質的二手車買賣服務，讓每一位顧客都能安心選購理想座駕。</p>
 	        </div>
 
 	        <div class="grid grid-cols-1 md:grid-cols-3 gap-12">
 	            <div class="text-center p-8 rounded-2xl bg-blue-50 hover:shadow-lg transition">
 	                <div class="w-16 h-16 bg-blue-600 text-white rounded-full flex items-center justify-center mx-auto mb-6 text-2xl">
-	                    <i class="fas fa-mobile-alt"></i>
+	                    <i class="fas fa-search"></i>
 	                </div>
-	                <h3 class="text-xl font-bold mb-4">遠端即現場</h3>
-	                <p class="text-gray-600 leading-relaxed">不必出門！透過高清視訊與 4K 環景攝影，所有車況細節盡收眼底，就像親臨現場。</p>
+	                <h3 class="text-xl font-bold mb-4">嚴格車況把關</h3>
+	                <p class="text-gray-600 leading-relaxed">每台車輛上架前皆經過仔細檢查，排除重大事故與泡水車，讓您買得安心、開得放心。</p>
 	            </div>
 
 	            <div class="text-center p-8 rounded-2xl bg-blue-50 hover:shadow-lg transition">
 	                <div class="w-16 h-16 bg-blue-600 text-white rounded-full flex items-center justify-center mx-auto mb-6 text-2xl">
-	                    <i class="fas fa-bolt"></i>
+	                    <i class="fas fa-tags"></i>
 	                </div>
-	                <h3 class="text-xl font-bold mb-4">閃電交付</h3>
-	                <p class="text-gray-600 leading-relaxed">一站式數位化代辦。從貸款試算到過戶手續，最快 24 小時內讓您開著愛車回家。</p>
+	                <h3 class="text-xl font-bold mb-4">實車實價透明</h3>
+	                <p class="text-gray-600 leading-relaxed">堅持實車在店、價格公開透明，絕不以低價盲目吸引客人，保障您的購車權益。</p>
 	            </div>
 
 	            <div class="text-center p-8 rounded-2xl bg-blue-50 hover:shadow-lg transition">
 	                <div class="w-16 h-16 bg-blue-600 text-white rounded-full flex items-center justify-center mx-auto mb-6 text-2xl">
-	                    <i class="fas fa-headset"></i>
+	                    <i class="fas fa-handshake"></i>
 	                </div>
-	                <h3 class="text-xl font-bold mb-4">雲端小管家</h3>
-	                <p class="text-gray-600 leading-relaxed">購車後才是服務的開始。專屬線上諮詢，保養提醒與維修紀錄隨時查詢，我們是您的最強後援。</p>
+	                <h3 class="text-xl font-bold mb-4">誠信專業服務</h3>
+	                <p class="text-gray-600 leading-relaxed">在地用心經營，提供親切的賞車解說與買賣諮詢，我們將每位客人當作朋友般真誠對待。</p>
 	            </div>
 	        </div>
 	    </div>

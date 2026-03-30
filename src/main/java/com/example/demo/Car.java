@@ -18,6 +18,7 @@ public class Car {
     private String fuelType;
     private String transmission;
     private int mileage;
+    private String status = "已上架";
     
     @ElementCollection                  //建立一個額外的子表來儲存清單資料
     private List<String> features;
@@ -50,6 +51,7 @@ public class Car {
     public void setTransmission(String transmission) { this.transmission = transmission; }
     public void setMileage(int mileage) { this.mileage = mileage; }
     public void setFeatures(List<String> features) { this.features = features; }
+    public void setStatus(String status) { this.status = status; }
     //Setter 可修改的資料
     
     public Long getId() { return id; }
@@ -60,8 +62,10 @@ public class Car {
     public String getFuelType() { return fuelType; }
     public String getTransmission() { return transmission; }
     public int getMileage() { return mileage; }
-    public List<String> getFeatures() { return features; }
+    public String getStatus() { return status; }
+    
 }
     //Getter 可讀取的資料
+
 
   

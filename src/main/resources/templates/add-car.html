@@ -8,11 +8,23 @@
 <body class="bg-gray-100 p-10">
     <div class="max-w-md mx-auto bg-white p-8 rounded shadow">
         <h2 class="text-2xl font-bold mb-6">填寫車輛資訊</h2>
-        <form th:action="@{/save-car}" th:object="${car}" method="post">
+        
+        <form th:action="@{/car/save}" th:object="${car}" method="post">
+            
             <div class="mb-4">
                 <label class="block mb-2">車名：</label>
                 <input type="text" th:field="*{name}" class="w-full border p-2 rounded" placeholder="例如：BMW M4">
             </div>
+            
+            <div class="mb-4">
+                <label class="block mb-2">售價：</label>
+                <input type="text" th:field="*{price}" class="w-full border p-2 rounded" placeholder="例如：$3,200,000">
+            </div>
+            <div class="mb-4">
+                <label class="block mb-2">年份：</label>
+                <input type="text" th:field="*{year}" class="w-full border p-2 rounded" placeholder="例如：2024 年份">
+            </div>
+            
             <button type="submit" class="w-full bg-green-600 text-white py-2 rounded hover:bg-green-700">確認上架</button>
         </form>
     </div>
