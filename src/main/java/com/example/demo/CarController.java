@@ -18,6 +18,8 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import java.security.Principal;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import javax.servlet.http.HttpServletRequest;
+import org.springframework.web.multipart.MultipartFile;
+import java.nio.file.*;
 
 @Controller
 public class CarController {
@@ -46,27 +48,36 @@ public class CarController {
 	        @RequestParam String year, 
 	        @RequestParam String price, 
 	        @RequestParam String phone, 
-	        Model model) { 
+	        @RequestParam String sellerName,
+	        RedirectAttributes redirectAttributes) { // 🚨 改用 RedirectAttributes 來傳遞訊息
 
 	    System.out.println("收到賣車申請：" + name + "，電話：" + phone); 
 	    Car newCar = new Car();                                         
 	    newCar.setName(name);
+	    newCar.setSellerName(sellerName);
 	    newCar.setYear(year);
 	    newCar.setPrice(price);
+	    newCar.setPhone(phone);
 	    
-	    // 🚨 新增這行：將客人提交的車輛強制標記為「待審核」
+	    // 💡 救援行動：幫沒有填寫的欄位塞入「預設值」，避免資料庫因為 null 而報錯
+	    newCar.setMileage("未知");
+	    newCar.setFuelType("未知");
+	    newCar.setTransmission("未知");
+	    newCar.setImage("default.jpg"); // 隨便給個預設圖片名稱避免破圖
+	    
+	    
+	    // 標記為待審核
 	    newCar.setStatus("待審核");
 	    System.out.println("【偵錯】準備存入資料庫，這台車的狀態目前是：" + newCar.getStatus());
 
-	    carRepository.save(newCar);      //保存資料
+	    carRepository.save(newCar); // 存入資料庫，現在不會報錯了！
 	    
-	    // 🚨 這裡也要改！改成只撈取「已上架」的車，才不會把剛提交的待審核車輛也顯示出來
-	    model.addAttribute("cars", carRepository.findByStatus("已上架")); 
-	                                                       
-	    model.addAttribute("message", "✅ 提交成功！我們已收到您的「" + name + "」賣車申請，專員將盡快聯絡。");
+	    // 🚨 使用 flash 屬性傳遞訊息，這樣跳轉後訊息還會保留一次
+	    redirectAttributes.addFlashAttribute("message", "✅ 提交成功！我們已收到您的「" + name + "」賣車申請，專員將盡快聯絡。");
 	    
-	    return "car"; 
-	}                                                   
+	    // 🚨 改為 Redirect，讓網址乾淨地回到首頁
+	    return "redirect:/index"; 
+	}                                                 
 	
 	@GetMapping("/reserve")   //登入成功才能預約
 	public String showReservePage(Model model, @RequestParam(required = false) String carName) {
@@ -166,16 +177,16 @@ public class CarController {
 	        
 	        // 2. 建立資料並直接存入 Repository
 	        carRepository.save(new Car(null, "BMW 3-Series Sedan", "$1,480,000", "2021 年份", "/images/Bmw3.jpg", 
-	                    "2.0L 汽油", "手自排", 25000, Arrays.asList("天窗", "感應尾門", "ACC自適應巡航")));
+	                    "2.0L 汽油", "手自排", "25000", Arrays.asList("天窗", "感應尾門", "ACC自適應巡航")));
 	        
 	        carRepository.save(new Car(null, "Mercedes-Benz C-Class", "$1,280,000", "2019 年份", "/images/Benz.jpg", 
-	                    "1.5L 汽油", "九速手自排", 48000, Arrays.asList("倒車顯影", "盲點偵測", "電動座椅")));
+	                    "1.5L 汽油", "九速手自排", "48000", Arrays.asList("倒車顯影", "盲點偵測", "電動座椅")));
 	        
 	        carRepository.save(new Car(null, "Toyota RAV4 Hybrid", "$980,000", "2022 年份", "/images/Rav4.jpeg", 
-	                    "2.5L 油電", "E-CVT", 12000, Arrays.asList("通風座椅", "360環景", "電動尾門")));
+	                    "2.5L 油電", "E-CVT", "12000", Arrays.asList("通風座椅", "360環景", "電動尾門")));
 	        
 	        carRepository.save(new Car(null, "Porsche 911", "$5,200,000", "2023 年份", "/images/porche.jpg", 
-	                    "3.0L 汽油", "PDK雙離合", 3500, Arrays.asList("跑車排氣", "PDLS頭燈", "真皮內裝")));
+	                    "3.0L 汽油", "PDK雙離合", "3500", Arrays.asList("跑車排氣", "PDLS頭燈", "真皮內裝")));
 	        
 	        System.out.println("✅ 已成功初始化 H2 資料庫的汽車範例資料！");
 	    }
@@ -213,59 +224,84 @@ public class CarController {
 	}
 	
 	// 顯示首頁 (支援搜尋功能)
-	@GetMapping({"/", "/index"})     // 支援兩個路徑，無論輸入首頁網址或 /index 都會進入此方法
+	@GetMapping({"/", "/index"})
 	public String showIndex(@RequestParam(name = "keyword", required = false) String keyword,
-			  @RequestParam(name = "priceRange", required = false) String priceRange,
+	                        @RequestParam(name = "priceRange", required = false) String priceRange,
 	                        HttpSession session, 
 	                        Model model) {
 	    
-		
-	    String nickname = (String) session.getAttribute("nickname");// 1. 檢查 Session：確認使用者是否已登入，若有則拿到暱稱
+	    // 1. 檢查 Session 暱稱
+	    String nickname = (String) session.getAttribute("nickname");
 	    if (nickname != null) {
 	        model.addAttribute("nickname", nickname);
 	    }
 
-	    
-	    //先根據關鍵字撈出初步清單
+	    // 2. 先根據關鍵字或狀態撈出初步清單
 	    List<Car> allCars;
 	    if (keyword != null && !keyword.trim().isEmpty()) {
 	        allCars = carRepository.findByNameContainingIgnoreCase(keyword);
 	        model.addAttribute("message", "您搜尋的關鍵字是：「" + keyword + "」");
 	    } else {
-	    	allCars = carRepository.findByStatus("已上架");
+	        allCars = carRepository.findByStatus("已上架");
 	    }
 	        
-	     
-	    //  核心修正：根據價格區間進行「二次過濾」
+	    // 3. 核心修正：安全地進行區間過濾
 	    List<Car> finalFilteredCars = new java.util.ArrayList<>();
 	    
 	    for (Car car : allCars) {
-	        // 先把資料庫字串轉成純數字才能比大小
-	        int priceInt = Integer.parseInt(car.getPrice().replaceAll("[$,]", ""));
-	        
-	        // 2. 進行區間判斷
+	        // 如果使用者沒有選擇任何價格區間，全部都加進來
 	        if (priceRange == null || priceRange.isEmpty()) {
-	            finalFilteredCars.add(car); // 沒選區間，顯示全部
-	        } 
-	        
-	        else if (priceRange.equals("under50") && priceInt < 500000) {
-	            finalFilteredCars.add(car); // 符合 50 萬以下
-	        } 
-	        else if (priceRange.equals("50-100") && priceInt >= 500000 && priceInt <= 1000000) {
-	            finalFilteredCars.add(car); // 符合 50-100 萬
-	        } 
-	        else if (priceRange.equals("100over") && priceInt > 1000000) {
-	            finalFilteredCars.add(car); // 符合 100 萬以上
+	            finalFilteredCars.add(car);
+	            continue; // 直接跑下一台車
+	        }
+
+	        try {
+	            // 💡 安全轉化：只提取數字，過濾掉 $ , 萬 或是 KM 等文字
+	            // 例如 "110萬" 會變成 "110"，"$1,480,000" 會變成 "1480000"
+	            String cleanPrice = car.getPrice().replaceAll("[^0-9]", "");
+	            
+	            // 如果過濾後是空的（例如內容是純文字「面議」），這台車在選區間時就先隱藏
+	            if (cleanPrice.isEmpty()) {
+	                continue; 
+	            }
+
+	            int priceInt = Integer.parseInt(cleanPrice);
+	            
+	            // 💡 邏輯校正：如果使用者輸入的是 "110萬"，轉出來是 110
+	            // 為了對應你的區間 (500000)，這裡可能需要判斷是否要乘上一萬，或者統一輸入格式
+	            // 以下維持你原本的區間判斷：
+	            if (priceRange.equals("under50") && priceInt < 500000) {
+	                finalFilteredCars.add(car);
+	            } 
+	            else if (priceRange.equals("50-100") && priceInt >= 500000 && priceInt <= 1000000) {
+	                finalFilteredCars.add(car);
+	            } 
+	            else if (priceRange.equals("100over") && priceInt > 1000000) {
+	                finalFilteredCars.add(car);
+	            }
+	        } catch (Exception e) {
+	            // 即使出錯（例如真的轉不動），也只是這台車不顯示，系統不會崩潰 500
+	            System.out.println("跳過價格無法辨識的車輛：" + car.getName());
 	        }
 	    }
+	    
 	    model.addAttribute("cars", finalFilteredCars);
 	    return "car"; 
 	}
 	
-	@PostMapping("/delete-car/{id}")
-	public String deleteCar(@PathVariable Long id) {
-	    carRepository.deleteById(id); // 從資料庫移除該 ID 的車
-	    return "redirect:/show-cars"; // 刪除完成後，重新整理回到首頁
+	@PostMapping("/car/delete/{id}")
+	public String deleteCar(@PathVariable Long id, HttpServletRequest request) {
+	    
+	    // 1. 安全檢查：確保只有登入且身分為 ADMIN 的人可以刪除
+	    if (request.getUserPrincipal() != null && request.isUserInRole("ADMIN")) {
+	        carRepository.deleteById(id);
+	        System.out.println("✅ 成功！車輛 ID: " + id + " 已成功下架");
+	    } else {
+	        System.out.println("❌ 警告：有人試圖非法刪除車輛！");
+	    }
+	    
+	    // 2. 刪除完成後，重新導向回首頁
+	    return "redirect:/index"; 
 	}
 	
 	@GetMapping("/logout")   // 當使用者點擊「登出」按鈕時觸發
@@ -398,17 +434,41 @@ public class CarController {
 
 	// 執行上架儲存
 	@PostMapping("/car/save")
-        public String saveCar(HttpServletRequest request, @ModelAttribute("car") Car car) {
-	    
-	    // 1. 儲存前一樣要阻擋駭客，檢查身分
-	    if (request.getUserPrincipal() == null || !request.isUserInRole("ADMIN")) {
-	        return "redirect:/login";
-	    }
-	    
-	    // 🚨 2. 關鍵細節：既然是管理員親手新增的車，狀態要直接給「已上架」！
-	    car.setStatus("已上架"); 
-	    
-	    carRepository.save(car);
-	    return "redirect:/"; // 儲存成功回首頁
-	}
+	public String saveCar(HttpServletRequest request, 
+            @ModelAttribute("car") Car car, 
+            @RequestParam("imageFile") MultipartFile imageFile,
+            @RequestParam(value = "featureList", required = false) List<String> featureList) {
+
+    // 1. 權限檢查：只有 ADMIN 能上架
+    if (request.getUserPrincipal() == null || !request.isUserInRole("ADMIN")) {
+    return "redirect:/login";
+  }
+
+    try {
+    // 2. 處理圖片上傳邏輯
+    if (imageFile != null && !imageFile.isEmpty()) {
+    String fileName = imageFile.getOriginalFilename();
+    // 🚨 注意：這會把圖片存到你專案的 static/images 資料夾下
+    Path path = Paths.get("src/main/resources/static/images/" + fileName);
+    Files.write(path, imageFile.getBytes());
+  
+    // 將圖片檔名存入資料庫
+    car.setImage(fileName);
+  }
+
+    // 3. 處理特色清單 (Features)
+    if (featureList != null) {
+    car.setFeatures(featureList);
+  }
+
+    } catch (Exception e) {
+    System.out.println("圖片上傳出錯：" + e.getMessage());
+  }
+
+    // 4. 設定狀態並存檔
+    car.setStatus("已上架"); 
+    carRepository.save(car);
+
+    return "redirect:/index"; // 成功後跳回首頁看新卡片
+  }
 }

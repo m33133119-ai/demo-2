@@ -84,51 +84,69 @@
         <span class="text-xl font-bold text-red-600" th:text="${message}">載入中...</span>
     </div>
 
-    <section class="container mx-auto py-16 px-6">
-        <h2 class="text-3xl font-bold mb-8 flex items-center">
-            <span class="border-l-4 border-blue-600 h-8 mr-3"></span>
-            熱門精選車款
-        </h2>
-        
-        <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
-            
-            <div th:each="c : ${cars}" class="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-xl transition-shadow border border-gray-100">
-                <img th:src="${c.image}" alt="Car" class="w-full h-48 object-cover">
-                
-				<div class="p-4">
-				    <span th:text="${c.year}" class="bg-blue-100 text-blue-800 text-xs font-semibold px-2.5 py-0.5 rounded">年份</span>
-				    <h3 th:text="${c.name}" class="text-xl font-bold mt-2 text-gray-800">車名</h3>
-				    <p th:text="${c.price}" class="text-red-600 font-bold text-lg mt-1">價格</p>
+	<section class="container mx-auto py-16 px-6">
+	    <h2 class="text-3xl font-bold mb-8 flex items-center">
+	        <span class="border-l-4 border-blue-600 h-8 mr-3"></span>
+	        熱門精選車款
+	    </h2>
+	    
+	    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+	        
+	        <div th:each="c : ${cars}" class="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-xl transition-shadow border border-gray-100 flex flex-col h-full">
+	            <img th:src="@{'/images/' + ${c.image}}" alt="Car" class="w-full h-48 object-cover">
+	            
+	            <div class="p-4 flex-grow flex flex-col">
+	                <span th:text="${c.year}" class="bg-blue-100 text-blue-800 text-[10px] font-semibold px-2 py-0.5 rounded w-fit">年份</span>
+	                
+	                <h3 th:text="${c.name}" class="text-lg font-bold mt-2 text-gray-800 truncate">車名</h3>
+	                <p th:text="${c.price}" class="text-red-600 font-bold text-lg mt-1">價格</p>
 
-				    <div class="flex gap-2 mt-4">
-				        <button th:onclick="'openModal(' + ${c.id} + ')'" 
-				                class="flex-1 bg-gray-100 text-gray-700 py-2 rounded font-semibold hover:bg-gray-200 transition">
-				            查看詳情
-				        </button>
-				        <a th:href="@{/reserve(carName=${c.name})}" 
-				           class="flex-1 bg-blue-600 text-white py-2 rounded text-center font-semibold hover:bg-blue-700 transition">
-				            預約賞車
-				        </a>
-				    </div>
+	                <div class="mt-4 py-3 border-t border-gray-50 grid grid-cols-3 gap-1 text-gray-500 text-[10px] text-center">
+	                    <div>
+	                        <p class="mb-1">⛽ 燃料</p>
+	                        <p th:text="${c.fuelType}" class="font-bold text-gray-700">汽油</p>
+	                    </div>
+	                    <div class="border-x border-gray-100">
+	                        <p class="mb-1">⚙️ 變速</p>
+	                        <p th:text="${c.transmission}" class="font-bold text-gray-700 truncate px-1">自動</p>
+	                    </div>
+	                    <div>
+	                        <p class="mb-1">🛣️ 里程</p>
+	                        <p th:text="${c.mileage}" class="font-bold text-gray-700">0</p>
+	                    </div>
+	                </div>
+
+	                <div class="mt-3 flex flex-wrap gap-1 h-12 overflow-hidden">
+	                    <span th:each="feat : ${c.features}" 
+	                          th:text="${feat}" 
+	                          class="bg-gray-50 text-gray-500 text-[10px] px-1.5 py-0.5 rounded border border-gray-100">
+	                          特色
+	                    </span>
+	                </div>
+
+	                <div class="flex gap-2 mt-auto pt-4">
+	                    <button th:onclick="'openModal(' + ${c.id} + ')'" 
+	                            class="flex-1 bg-gray-100 text-gray-700 py-2 rounded-lg font-semibold hover:bg-gray-200 transition text-xs">
+	                        查看詳情
+	                    </button>
+	                    <a th:href="@{/reserve(carName=${c.name})}" 
+	                       class="flex-1 bg-blue-600 text-white py-2 rounded-lg text-center font-semibold hover:bg-blue-700 transition text-xs">
+	                        預約賞車
+	                    </a>
+	                </div>
 					
-					<div class="mt-2" sec:authorize="hasRole('ADMIN')">
-					    <form th:action="@{'/delete-car/' + ${c.id}}" method="post" 
-					          onsubmit="return confirm('確定要將這台「' + [[${c.name}]] + '」永久下架嗎？');">
-					        <button type="submit" ...>
-					            <i class="fas fa-trash-alt mr-1"></i> 下架此車款
+					<div sec:authorize="hasRole('ADMIN')" class="mt-2 border-t pt-2">
+					    <form th:action="@{/car/delete/{id}(id=${c.id})}" method="post" 
+					          onsubmit="return confirm('確定要將這輛車下架嗎？此動作無法復原。')">
+					        <button type="submit" class="w-full bg-red-50 text-red-600 py-2 rounded-lg font-bold hover:bg-red-100 transition text-xs flex items-center justify-center">
+					            <i class="fas fa-trash-alt mr-2"></i> 立即下架車款
 					        </button>
 					    </form>
-					</div>
-
-				    <div class="mt-4 pt-4 border-t border-gray-100 flex justify-between text-gray-500 text-sm">
-				        <span><i class="fas fa-gas-pump mr-1"></i> <span th:text="${c.fuelType}">汽油</span></span>
-				        <span><i class="fas fa-cog mr-1"></i> <span th:text="${c.transmission}">自動</span></span>
-				        <span><i class="fas fa-map-marker-alt mr-1"></i> 台北市</span>
-				    </div>
-				</div>
-            </div>
-            </div>
-    </section>
+					</div>    
+	            </div>
+	        </div>
+	    </div>
+	</section>
 	
 	<section id="about-us" class="bg-white py-20 px-6">
 	    <div class="container mx-auto">
@@ -188,13 +206,7 @@
                 <p class="text-sm">地址：台北市信義區某某路 88 號</p>
                 <p class="text-sm">電話：02-1234-5678</p>
             </div>
-            <div>
-                <h4 class="text-white text-lg font-bold mb-4">追蹤我們</h4>
-                <div class="flex space-x-4">
-                    <a href="#" class="text-xl hover:text-white transition"><i class="fab fa-facebook"></i></a>
-                    <a href="#" class="text-xl hover:text-white transition"><i class="fab fa-line"></i></a>
-                    <a href="#" class="text-xl hover:text-white transition"><i class="fab fa-instagram"></i></a>
-                </div>
+            
             </div>
         </div>
         <div class="border-t border-gray-800 mt-10 pt-6 text-center text-xs">
@@ -234,46 +246,42 @@
 	</div>
 	
 	<script th:inline="javascript">
-	    /* 這裡由 Thymeleaf 把後端的 List<Car> 轉成 JS 陣列 */
 	    var cars = [[${cars}]];
 
 	    function openModal(carId) {
-	        // 1. 尋找對應 ID 的車
 	        var car = cars.find(function(item) {
 	            return item.id == carId;
 	        });
 
 	        if (car) {
-	            // 2. 填入內容
-	            document.getElementById('modalImage').src = car.image; // 對應 Car.java 的 image
+	            // ✅ 修正點 2：加上 /images/ 前綴
+	            document.getElementById('modalImage').src = '/images/' + car.image; 
+	            
 	            document.getElementById('modalName').innerText = car.name;
 	            document.getElementById('modalPrice').innerText = car.price;
 	            document.getElementById('modalYear').innerText = car.year;
 	            document.getElementById('modalFuel').innerText = car.fuelType;
 	            document.getElementById('modalTrans').innerText = car.transmission;
-	            document.getElementById('modalMileage').innerText = car.mileage.toLocaleString() + " km";
 	            
-	            // 處理配備清單
+	            // ✅ 修正點 3：因為 mileage 現在是 String，直接顯示即可，不使用 toLocaleString
+	            document.getElementById('modalMileage').innerText = car.mileage;
+	            
 	            if (car.features && car.features.length > 0) {
 	                document.getElementById('modalFeatures').innerText = car.features.join('、');
 	            } else {
 	                document.getElementById('modalFeatures').innerText = "基本配備";
 	            }
 
-	            // 更新預約按鈕連結
 	            document.getElementById('modalReserveLink').href = '/reserve?carName=' + encodeURIComponent(car.name);
-
-	            // 3. 顯示 Modal
 	            document.getElementById('carModal').classList.remove('hidden');
-	            document.body.style.overflow = 'hidden'; // 防止背景滾動
+	            document.body.style.overflow = 'hidden';
 	        }
 	    }
 
 	    function closeModal() {
 	        document.getElementById('carModal').classList.add('hidden');
-	        document.body.style.overflow = 'auto'; // 恢復背景滾動
+	        document.body.style.overflow = 'auto';
 	    }
 	</script>
-
 </body>
 </html>

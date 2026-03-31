@@ -14,6 +14,7 @@ public class Reservation {
     private String customerName;
     private String carName;
     private String date;
+    private String phone;
 
     
     public Reservation() { //空建構子
@@ -38,4 +39,12 @@ public class Reservation {
 
     public String getDate() { return date; }
     public void setDate(String date) { this.date = date; }
+    
+    public String getPhone() {
+        return phone;
+    }
+    
+    public void setPhone(String phone) {
+        this.phone = phone;
+    }
 }

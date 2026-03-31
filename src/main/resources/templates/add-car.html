@@ -2,30 +2,82 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
-    <title>上架新車款</title>
+    <title>專業上架系統 - 卓越中古車</title>
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body class="bg-gray-100 p-10">
-    <div class="max-w-md mx-auto bg-white p-8 rounded shadow">
-        <h2 class="text-2xl font-bold mb-6">填寫車輛資訊</h2>
+<body class="bg-gray-100 p-6">
+    <div class="max-w-2xl mx-auto bg-white p-8 rounded-xl shadow-md border-t-4 border-blue-600">
+        <h2 class="text-2xl font-bold mb-6 text-gray-800 flex items-center">
+            <span class="mr-2">🚗</span> 新增車輛資訊 (管理員後台)
+        </h2>
         
-        <form th:action="@{/car/save}" th:object="${car}" method="post">
+        <form th:action="@{/car/save}" th:object="${car}" method="post" enctype="multipart/form-data" class="grid grid-cols-2 gap-6">
             
-            <div class="mb-4">
-                <label class="block mb-2">車名：</label>
-                <input type="text" th:field="*{name}" class="w-full border p-2 rounded" placeholder="例如：BMW M4">
+            <div class="col-span-2">
+                <label class="block text-sm font-semibold text-gray-700">車款名稱</label>
+                <input type="text" th:field="*{name}" class="w-full border p-2.5 rounded-lg mt-1 focus:ring-2 focus:ring-blue-500 outline-none" placeholder="例如：Porsche 911 Carrera" required>
+            </div>
+
+            <div>
+                <label class="block text-sm font-semibold text-gray-700">售價</label>
+                <input type="text" th:field="*{price}" class="w-full border p-2.5 rounded-lg mt-1 focus:ring-2 focus:ring-blue-500 outline-none" placeholder="例如：$5,800,000" required>
             </div>
             
-            <div class="mb-4">
-                <label class="block mb-2">售價：</label>
-                <input type="text" th:field="*{price}" class="w-full border p-2 rounded" placeholder="例如：$3,200,000">
+            <div>
+                <label class="block text-sm font-semibold text-gray-700">年份</label>
+                <input type="text" th:field="*{year}" class="w-full border p-2.5 rounded-lg mt-1 focus:ring-2 focus:ring-blue-500 outline-none" placeholder="例如：2024 年份" required>
             </div>
-            <div class="mb-4">
-                <label class="block mb-2">年份：</label>
-                <input type="text" th:field="*{year}" class="w-full border p-2 rounded" placeholder="例如：2024 年份">
+
+            <div>
+                <label class="block text-sm font-semibold text-gray-700">里程數 (純數字)</label>
+                <input type="number" th:field="*{mileage}" class="w-full border p-2.5 rounded-lg mt-1 focus:ring-2 focus:ring-blue-500 outline-none" placeholder="例如：5000" required>
             </div>
             
-            <button type="submit" class="w-full bg-green-600 text-white py-2 rounded hover:bg-green-700">確認上架</button>
+            <div>
+                <label class="block text-sm font-semibold text-gray-700">排檔方式</label>
+                <input type="text" th:field="*{transmission}" class="w-full border p-2.5 rounded-lg mt-1 focus:ring-2 focus:ring-blue-500 outline-none" placeholder="例如：自手排 8 速" required>
+            </div>
+
+            <div class="col-span-2">
+                <label class="block text-sm font-semibold text-gray-700">燃料種類</label>
+                <input type="text" th:field="*{fuelType}" class="w-full border p-2.5 rounded-lg mt-1 focus:ring-2 focus:ring-blue-500 outline-none" placeholder="例如：汽油 / 電能" required>
+            </div>
+
+            <div class="col-span-2">
+                <label class="block text-sm font-semibold text-gray-700 mb-2">配備特色 (可多選)</label>
+                <div class="grid grid-cols-3 gap-3 bg-gray-50 p-4 rounded-lg border border-dashed border-gray-300">
+                    <label class="flex items-center space-x-2 text-sm text-gray-600">
+                        <input type="checkbox" name="featureList" value="倒車顯影" class="rounded text-blue-600"> <span>倒車顯影</span>
+                    </label>
+                    <label class="flex items-center space-x-2 text-sm text-gray-600">
+                        <input type="checkbox" name="featureList" value="定速巡航" class="rounded text-blue-600"> <span>定速巡航</span>
+                    </label>
+                    <label class="flex items-center space-x-2 text-sm text-gray-600">
+                        <input type="checkbox" name="featureList" value="Apple CarPlay" class="rounded text-blue-600"> <span>Apple CarPlay</span>
+                    </label>
+                    <label class="flex items-center space-x-2 text-sm text-gray-600">
+                        <input type="checkbox" name="featureList" value="摸門解鎖" class="rounded text-blue-600"> <span>摸門解鎖</span>
+                    </label>
+                    <label class="flex items-center space-x-2 text-sm text-gray-600">
+                        <input type="checkbox" name="featureList" value="電動尾門" class="rounded text-blue-600"> <span>電動尾門</span>
+                    </label>
+                    <label class="flex items-center space-x-2 text-sm text-gray-600">
+                        <input type="checkbox" name="featureList" value="盲點偵測" class="rounded text-blue-600"> <span>盲點偵測</span>
+                    </label>
+                </div>
+            </div>
+
+            <div class="col-span-2">
+                <label class="block text-sm font-semibold text-gray-700">車輛實拍照片</label>
+                <input type="file" name="imageFile" accept="image/*" class="w-full border p-2 rounded-lg mt-1 bg-white file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100" required>
+            </div>
+
+            <div class="col-span-2 mt-6">
+                <button type="submit" class="w-full bg-blue-600 text-white py-3.5 rounded-xl font-bold text-lg hover:bg-blue-700 shadow-lg hover:shadow-blue-200 transition-all active:scale-95">
+                    🚀 確認上架並發布至首頁
+                </button>
+                <a href="/index" class="block text-center text-gray-400 text-sm mt-4 hover:text-gray-600 underline">暫時取消，返回首頁</a>
+            </div>
         </form>
     </div>
 </body>
