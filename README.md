@@ -7,7 +7,7 @@
 後端框架: Spring Boot (簡化配置、快速開發)   
 資料存取: Spring Data JPA (自動化資料庫 CRUD 操作)   
 樣板引擎: Thymeleaf (動態網頁渲染)   
-資料庫: H2 Database (開發環境)    
+資料庫: MariaDB (開發環境)    
 依賴管理: Maven (自動化 JAR 包管理)   
 前端設計: HTML5, CSS3 (Bootstrap 框架)   
 
