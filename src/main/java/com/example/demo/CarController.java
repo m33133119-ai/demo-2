@@ -42,14 +42,14 @@ public class CarController {
 	    return "sell"; 
 	}                                                  
 
-	@PostMapping("/submit-car")      //登入管理:登入後跳轉到賣車業面
+	@PostMapping("/submit-car")      //登入管理:我要賣車功能
 	public String handleSellForm(
 	        @RequestParam String name, 
 	        @RequestParam String year, 
 	        @RequestParam String price, 
 	        @RequestParam String phone, 
 	        @RequestParam String sellerName,
-	        RedirectAttributes redirectAttributes) { // 🚨 改用 RedirectAttributes 來傳遞訊息
+	        RedirectAttributes redirectAttributes) { 
 
 	    System.out.println("收到賣車申請：" + name + "，電話：" + phone); 
 	    Car newCar = new Car();                                         
@@ -59,38 +59,38 @@ public class CarController {
 	    newCar.setPrice(price);
 	    newCar.setPhone(phone);
 	    
-	    // 💡 救援行動：幫沒有填寫的欄位塞入「預設值」，避免資料庫因為 null 而報錯
+	    
 	    newCar.setMileage("未知");
 	    newCar.setFuelType("未知");
 	    newCar.setTransmission("未知");
-	    newCar.setImage("default.jpg"); // 隨便給個預設圖片名稱避免破圖
+	    newCar.setImage("default.jpg"); 
 	    
 	    
-	    // 標記為待審核
+	    
 	    newCar.setStatus("待審核");
 	    System.out.println("【偵錯】準備存入資料庫，這台車的狀態目前是：" + newCar.getStatus());
 
-	    carRepository.save(newCar); // 存入資料庫，現在不會報錯了！
+	    carRepository.save(newCar); 
 	    
-	    // 🚨 使用 flash 屬性傳遞訊息，這樣跳轉後訊息還會保留一次
+	    
 	    redirectAttributes.addFlashAttribute("message", "✅ 提交成功！我們已收到您的「" + name + "」賣車申請，專員將盡快聯絡。");
 	    
-	    // 🚨 改為 Redirect，讓網址乾淨地回到首頁
+	    
 	    return "redirect:/index"; 
 	}                                                 
 	
 	@GetMapping("/reserve")   //登入成功才能預約
 	public String showReservePage(Model model, @RequestParam(required = false) String carName) {
 	    
-	    // 1. 準備一個空的預約物件，給 Thymeleaf 表單裝資料用
+	    
 	    Reservation reservation = new Reservation(); 
 	    
-	    // 2. 如果網址有傳遞車名過來 (例如從首頁點擊預約賞車)，就自動填入車名
+	    
 	    if (carName != null) {
 	        reservation.setCarName(carName); 
 	    }
 	    
-	    // 3. 把這個物件命名為 "reservation" 傳給前端網頁，解決 500 錯誤！
+	   
 	    model.addAttribute("reservation", reservation); 
 	    model.addAttribute("cars", carRepository.findByStatus("已上架"));
 	    return "reserve";
@@ -138,35 +138,35 @@ public class CarController {
 	    return "register";
 	}
 
-	@PostMapping("/register")                       // 處理註冊表單提交 (POST)
+	@PostMapping("/register")                       
 	public String handleRegister(
-	        @RequestParam String name, 				// 接收使用者姓名/暱稱
-	        @RequestParam String email,             // 接收 Email
-	        @RequestParam String password,          //接收密碼
-	        @RequestParam String confirmPassword,   // 接收第二次確認密碼
+	        @RequestParam String name, 				
+	        @RequestParam String email,             
+	        @RequestParam String password,          
+	        @RequestParam String confirmPassword,   
 	        Model model) {
 	    
 	                                               
-	    if (!password.equals(confirmPassword)) { //密碼一致性
+	    if (!password.equals(confirmPassword)) { 
 	        model.addAttribute("message", "❌ 註冊失敗：兩次輸入的密碼不一致！");
 	        return "register"; 
 	    }
 
 	                                                 
-	    if (!password.matches("\\d{8}")) {//密碼格式檢查
+	    if (!password.matches("\\d{8}")) {
 	        model.addAttribute("message", "❌ 註冊失敗：密碼必須是剛好 8 位數字！");
 	        return "register";
 	    }
 
 	                                        
-	    User newUser = new User();//存入資料庫
+	    User newUser = new User();
 	    newUser.setName(name);
 	    newUser.setEmail(email);
 	    newUser.setPassword(password);
 	    
-	    userRepository.save(newUser);       // 呼叫 User 資料庫管理員，將新會員存檔
+	    userRepository.save(newUser);      
 	    
-	    model.addAttribute("message", "🎉 註冊成功！密碼格式正確。請登入。");     // 註冊成功後，帶著成功訊息導向「登入頁面」
+	    model.addAttribute("message", "🎉 註冊成功！密碼格式正確。請登入。");     
 	    return "login"; 
 	}
 	                               
