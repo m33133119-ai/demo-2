@@ -17,27 +17,30 @@
             <p class="text-gray-500 mt-2">歡迎回來，請登入您的帳號</p>
         </div>
 
+        <!-- 原本的動態訊息保留 (例如登出後跳轉回此頁可能會用到) -->
         <div th:if="${message}" class="mb-6 p-4 rounded-lg bg-blue-50 border-l-4 border-blue-500 text-blue-700 flex items-center shadow-sm">
             <i class="fas fa-info-circle mr-3"></i>
             <span class="text-sm font-medium" th:text="${message}">這裡顯示動態訊息</span>
         </div>
-
-        <div th:if="${param.error}" class="mb-6 p-4 rounded-lg bg-red-50 border-l-4 border-red-500 text-red-700 flex items-center shadow-sm">
-            <i class="fas fa-exclamation-circle mr-3"></i>
-            <span class="text-sm font-medium">帳號或密碼錯誤，請重新輸入！</span>
-        </div>
-
         <div th:if="${param.logout}" class="mb-6 p-4 rounded-lg bg-green-50 border-l-4 border-green-500 text-green-700 flex items-center shadow-sm">
             <i class="fas fa-check-circle mr-3"></i>
             <span class="text-sm font-medium">您已成功登出，期待下次相見！</span>
         </div>
 
-        <form th:action="@{/login}" method="post" class="space-y-6">
+        <!-- ★ 新增：這是專屬給 API 控制的動態錯誤訊息區塊 -->
+        <div id="errorMessage" class="hidden mb-6 p-4 rounded-lg bg-red-50 border-l-4 border-red-500 text-red-700 flex items-center shadow-sm">
+            <i class="fas fa-exclamation-circle mr-3"></i>
+            <span id="errorText" class="text-sm font-medium"></span>
+        </div>
+
+        <!-- ★ 修改：移除 th:action 與 method，加上 id="loginForm" -->
+        <form id="loginForm" class="space-y-6">
             
             <div>
                 <label class="block text-sm font-medium text-gray-700 mb-1">帳號 (Email)</label>
                 <div class="relative">
-					<input type="email" name="email" required 
+                    <!-- ★ 修改：加上 id="email" 讓 JS 抓得到 -->
+					<input type="email" name="email" id="email" required 
 					       class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
 					       placeholder="example@mail.com">
                 </div>
@@ -49,7 +52,8 @@
                     <a th:href="@{/forgot-password}" class="text-xs text-blue-600 hover:underline">忘記密碼？</a>
                 </div>
                 <div class="relative">
-                    <input type="password" name="password" required 
+                    <!-- ★ 修改：加上 id="password" 讓 JS 抓得到 -->
+                    <input type="password" name="password" id="password" required 
                            minlength="8" maxlength="8" pattern="\d{8}" inputmode="numeric"
                            title="請輸入 8 位數字密碼" placeholder="請輸入 8 位數字密碼"
                            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition">
@@ -77,5 +81,53 @@
         </div>
     </div>
 
+    <!-- ★ 新增：負責與 Spring Boot API 溝通的 JavaScript -->
+    <script>
+        document.getElementById('loginForm').addEventListener('submit', function(event) {
+            // 1. 阻止表單預設的跳轉行為，不讓 Spring Security 攔截
+            event.preventDefault();
+
+            // 2. 抓取輸入框裡的帳號與密碼
+            const emailValue = document.getElementById('email').value;
+            const passwordValue = document.getElementById('password').value;
+
+            // 3. 準備控制錯誤訊息框
+            const errorBox = document.getElementById('errorMessage');
+            const errorText = document.getElementById('errorText');
+            errorBox.classList.add('hidden'); // 每次點擊登入先隱藏錯誤框
+
+            // 4. 使用 fetch 把資料打包成 JSON 送給後端 API
+            fetch('/api/users/login', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    email: emailValue,
+                    password: passwordValue
+                })
+            })
+            .then(async response => {
+                const message = await response.text(); // 取得 Java 後端回傳的字串
+
+                if (response.ok) {
+                    // 綠燈 (HTTP 200 OK)：登入成功
+                    // 導向首頁 (假設首頁網址是 /index)
+                    window.location.href = '/index'; 
+                } else {
+                    // 紅燈 (HTTP 401, 403)：登入失敗
+                    // 將後端回傳的中文錯誤訊息，塞進網頁的紅色警告框裡顯示
+                    errorText.textContent = message; 
+                    errorBox.classList.remove('hidden'); 
+                }
+            })
+            .catch(error => {
+                // 如果伺服器沒開，或是網路斷線會跑到這裡
+                console.error('Error:', error);
+                errorText.textContent = "系統連線發生錯誤，請稍後再試！";
+                errorBox.classList.remove('hidden');
+            });
+        });
+    </script>
 </body>
 </html>

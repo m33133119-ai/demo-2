@@ -20,29 +20,30 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import javax.servlet.http.HttpServletRequest;
 import org.springframework.web.multipart.MultipartFile;
 import java.nio.file.*;
+import com.example.demo.enums.CarStatus;
 
 @Controller
 public class CarController {
 	
 	
 	
-	@Autowired                                              //依賴注入
-    private ReservationRepository reservationRepository;    //連結預約資料表RESERVATION的專屬窗口。
+	@Autowired                                              
+    private ReservationRepository reservationRepository;    
 	
 	@Autowired
-    private CarRepository carRepository;                    //連結汽車資料表 (CARS)的窗口。
+    private CarRepository carRepository;                    
 	
 	@Autowired
-    private UserRepository userRepository;                  //連結使用者資料表 (USERS)的窗口
+    private UserRepository userRepository;                
 
 	
-	@GetMapping("/sell")       //登入管理:必須先登入才能賣車
+	@GetMapping("/sell")       
 	public String showSellPage() {
-	    // 交給 Spring Security 保護，這裡只要單純回傳 HTML 檔名即可
+	   
 	    return "sell"; 
 	}                                                  
 
-	@PostMapping("/submit-car")      //登入管理:我要賣車功能
+	@PostMapping("/submit-car")      
 	public String handleSellForm(
 	        @RequestParam String name, 
 	        @RequestParam String year, 
@@ -67,7 +68,7 @@ public class CarController {
 	    
 	    
 	    
-	    newCar.setStatus("待審核");
+	    newCar.setStatus(CarStatus.PENDING_REVIEW);
 	    System.out.println("【偵錯】準備存入資料庫，這台車的狀態目前是：" + newCar.getStatus());
 
 	    carRepository.save(newCar); 
@@ -79,7 +80,7 @@ public class CarController {
 	    return "redirect:/index"; 
 	}                                                 
 	
-	@GetMapping("/reserve")   //登入成功才能預約
+	@GetMapping("/reserve")   
 	public String showReservePage(Model model, @RequestParam(required = false) String carName) {
 	    
 	    
@@ -92,49 +93,49 @@ public class CarController {
 	    
 	   
 	    model.addAttribute("reservation", reservation); 
-	    model.addAttribute("cars", carRepository.findByStatus("已上架"));
+	    model.addAttribute("cars", carRepository.findByStatus(CarStatus.LISTED));
 	    return "reserve";
 	}                                                
 	
 
 	
-	@PostMapping("/submit-reserve")//預約功能(處存資料)
+	@PostMapping("/submit-reserve")
 	public String handleReserve(@RequestParam String customerName, 
 	                            @RequestParam String carName, 
 	                            @RequestParam String date, 
-	                            HttpSession session,         // ✨ 注入 Session
+	                            HttpSession session,         
 	                            Model model) {
 		                                                     
-		Reservation res = new Reservation();//正式改用 Repository 存入資料庫
+		Reservation res = new Reservation();
 	    res.setCustomerName(customerName);
 	    res.setCarName(carName);
 	    res.setDate(date);
 	    
 	                                                         
-	    reservationRepository.save(res);  // 呼叫資料庫管理員進行存檔
+	    reservationRepository.save(res);  
 	    
 	                                                         
-	    String nickname = (String) session.getAttribute("nickname");// 2. 處理 Session 暱稱邏輯
+	    String nickname = (String) session.getAttribute("nickname");
 	    if (nickname == null) {
 	        session.setAttribute("nickname", customerName);
 	        nickname = customerName;
 	    }
 	    
 	                                                          
-	    model.addAttribute("nickname", nickname); // 3. 準備回傳給首頁的資料
-	    model.addAttribute("cars", carRepository.findAll()); // 建議改用 Repository 抓取最新車單
+	    model.addAttribute("nickname", nickname); 
+	    model.addAttribute("cars", carRepository.findAll()); 
 	    model.addAttribute("message", "✅ 預約成功！");
 	    return "car"; 
 	}                                   
 
 
-	@GetMapping("/login")               // 當使用者在網頁網址輸入 /login 或點擊「登入」連結時觸發
-	public String showLoginPage() {     // 單純回傳 "login"，告訴 Spring Boot 去 templates 資料夾找 login.html 檔案顯示出來
+	@GetMapping("/login")               
+	public String showLoginPage() {    
         return "login"; 
     }
 	
-	@GetMapping("/register")            // 當使用者在網址列輸入 /register，或點擊「加入會員」時觸發
-	public String showRegisterPage() {  // 告訴 Spring Boot 去 templates 資料夾找到名為 register.html 的檔案並呈現給使用者
+	@GetMapping("/register")            
+	public String showRegisterPage() {  
 	    return "register";
 	}
 
@@ -171,11 +172,11 @@ public class CarController {
 	}
 	                               
 	@PostConstruct
-	public void initData() { // 在 Controller 啟動時檢查資料庫是否為空
+	public void initData() { 
 	                               
-	    if (carRepository.count() == 0) {// 1. 檢查資料庫是否已經有資料，避免重複新增
+	    if (carRepository.count() == 0) {
 	        
-	        // 2. 建立資料並直接存入 Repository
+	        
 	        carRepository.save(new Car(null, "BMW 3-Series Sedan", "$1,480,000", "2021 年份", "/images/Bmw3.jpg", 
 	                    "2.0L 汽油", "手自排", "25000", Arrays.asList("天窗", "感應尾門", "ACC自適應巡航")));
 	        
@@ -192,84 +193,81 @@ public class CarController {
 	    }
 	}
 	
-	                                    // 顯示「我的預約」清單頁面
-	@GetMapping("/my-reservations")     // 當使用者存取 /my-reservations 網址時觸發
+	                                    
+	@GetMapping("/my-reservations")     
 	public String showMyReservations(HttpSession session, Model model) {
 		
 		                                
-	    String nickname = (String) session.getAttribute("nickname");// 1. 從 Session 中嘗試取得使用者的暱稱
+	    String nickname = (String) session.getAttribute("nickname");
 	    
 	                             
-	    if (nickname != null) { // 如果暱稱存在（代表使用者已登入），則傳遞給 Model，讓網頁導覽列能顯示「歡迎，某某某」
+	    if (nickname != null) { 
 	        model.addAttribute("nickname", nickname);
 	    }
 	                  
-	    List<Reservation> dbReservations = reservationRepository.findAll(); // 2. 從資料庫中取出「所有的」預約紀錄
+	    List<Reservation> dbReservations = reservationRepository.findAll(); 
 	    
 	    
-	    model.addAttribute("reservations", dbReservations);// 3. 將撈出來的預約清單放入 Model，名稱為 "reservations"
+	    model.addAttribute("reservations", dbReservations);
 	    
 	    return "my-reservations"; 
 	}
 	
-	// 刪除特定一筆預約紀錄
-	@GetMapping("/delete-reservation/{id}")        // 確保這裡是接收資料庫的 ID
-	public String deleteReservation(@PathVariable Long id) {   // @PathVariable 會自動把網址後方的數字抓下來，傳進變數 index 中
+	
+	@GetMapping("/delete-reservation/{id}")        
+	public String deleteReservation(@PathVariable Long id) {   
 	   
 		
-	    reservationRepository.deleteById(id);// 直接呼叫 repository 從資料庫中刪除這筆 ID 對應的資料
+	    reservationRepository.deleteById(id);
 	   
 	   
-	    return "redirect:/my-reservations";// 刪除後重新導向，這時 showMyReservations 會重新從資料庫撈取「最新」清單
+	    return "redirect:/my-reservations";
 	}
 	
-	// 顯示首頁 (支援搜尋功能)
+	
 	@GetMapping({"/", "/index"})
 	public String showIndex(@RequestParam(name = "keyword", required = false) String keyword,
 	                        @RequestParam(name = "priceRange", required = false) String priceRange,
 	                        HttpSession session, 
 	                        Model model) {
 	    
-	    // 1. 檢查 Session 暱稱
+	    
 	    String nickname = (String) session.getAttribute("nickname");
 	    if (nickname != null) {
 	        model.addAttribute("nickname", nickname);
 	    }
 
-	    // 2. 先根據關鍵字或狀態撈出初步清單
+	   
 	    List<Car> allCars;
 	    if (keyword != null && !keyword.trim().isEmpty()) {
 	        allCars = carRepository.findByNameContainingIgnoreCase(keyword);
 	        model.addAttribute("message", "您搜尋的關鍵字是：「" + keyword + "」");
 	    } else {
-	        allCars = carRepository.findByStatus("已上架");
+	    	allCars = carRepository.findByStatus(CarStatus.LISTED);
 	    }
 	        
-	    // 3. 核心修正：安全地進行區間過濾
+	    
 	    List<Car> finalFilteredCars = new java.util.ArrayList<>();
 	    
 	    for (Car car : allCars) {
-	        // 如果使用者沒有選擇任何價格區間，全部都加進來
+	        
 	        if (priceRange == null || priceRange.isEmpty()) {
 	            finalFilteredCars.add(car);
-	            continue; // 直接跑下一台車
+	            continue; 
 	        }
 
 	        try {
-	            // 💡 安全轉化：只提取數字，過濾掉 $ , 萬 或是 KM 等文字
-	            // 例如 "110萬" 會變成 "110"，"$1,480,000" 會變成 "1480000"
+	          
 	            String cleanPrice = car.getPrice().replaceAll("[^0-9]", "");
 	            
-	            // 如果過濾後是空的（例如內容是純文字「面議」），這台車在選區間時就先隱藏
+	         
 	            if (cleanPrice.isEmpty()) {
 	                continue; 
 	            }
 
 	            int priceInt = Integer.parseInt(cleanPrice);
 	            
-	            // 💡 邏輯校正：如果使用者輸入的是 "110萬"，轉出來是 110
-	            // 為了對應你的區間 (500000)，這裡可能需要判斷是否要乘上一萬，或者統一輸入格式
-	            // 以下維持你原本的區間判斷：
+	          
 	            if (priceRange.equals("under50") && priceInt < 500000) {
 	                finalFilteredCars.add(car);
 	            } 
@@ -280,7 +278,7 @@ public class CarController {
 	                finalFilteredCars.add(car);
 	            }
 	        } catch (Exception e) {
-	            // 即使出錯（例如真的轉不動），也只是這台車不顯示，系統不會崩潰 500
+	           
 	            System.out.println("跳過價格無法辨識的車輛：" + car.getName());
 	        }
 	    }
@@ -292,7 +290,7 @@ public class CarController {
 	@PostMapping("/car/delete/{id}")
 	public String deleteCar(@PathVariable Long id, HttpServletRequest request) {
 	    
-	    // 1. 安全檢查：確保只有登入且身分為 ADMIN 的人可以刪除
+	   
 	    if (request.getUserPrincipal() != null && request.isUserInRole("ADMIN")) {
 	        carRepository.deleteById(id);
 	        System.out.println("✅ 成功！車輛 ID: " + id + " 已成功下架");
@@ -300,47 +298,47 @@ public class CarController {
 	        System.out.println("❌ 警告：有人試圖非法刪除車輛！");
 	    }
 	    
-	    // 2. 刪除完成後，重新導向回首頁
+	   
 	    return "redirect:/index"; 
 	}
 	
-	@GetMapping("/logout")   // 當使用者點擊「登出」按鈕時觸發
+	@GetMapping("/logout")   
 	public String logout(HttpSession session) {
 	    session.invalidate(); 
 	    return "redirect:/index";
 	}
 	
-	@GetMapping("/forgot-password")     // 當使用者在登入頁點擊「忘記密碼」時觸發        
+	@GetMapping("/forgot-password")         
 	public String showForgotPasswordPage() {
 	    return "forgot-password"; 
 	}
 	
-	//處理重設密碼的 POST 請求當使用者在忘記密碼頁面填寫完資料並按下「送出」時，會觸發此方法//
+	
 	@PostMapping("/reset-password")
-	public String handleResetPassword(@RequestParam String name,        // 接收前端表單中 name 欄位輸入的值（使用者名稱）
-	                                  @RequestParam String email,       // 接收前端表單中 email 欄位輸入的值（電子信箱）
-	                                  @RequestParam String newPassword, // 接收前端表單中 newPassword 欄位輸入的值（新設定的密碼）
-	                                  Model model) {                    // Model 物件用於將資料傳回前端頁面
+	public String handleResetPassword(@RequestParam String name,        
+	                                  @RequestParam String email,       
+	                                  @RequestParam String newPassword, 
+	                                  Model model) {                    
 	    
 	    
-	    if (newPassword == null || !newPassword.matches("\\d{8}")) {    // 檢查新密碼是否為空，或是否「不符合」 8 位數字的正規表示式 (Regex)
+	    if (newPassword == null || !newPassword.matches("\\d{8}")) {    
 	        System.out.println("❌ 格式檢查失敗：新密碼不符合 8 位數字規則。");
-	        model.addAttribute("message", "❌ 重設失敗：新密碼必須是 8 位數字！");// 將錯誤訊息帶回前端頁面顯示
-	        return "forgot-password"; // 格式不對，停留在原頁面
+	        model.addAttribute("message", "❌ 重設失敗：新密碼必須是 8 位數字！");
+	        return "forgot-password"; 
 	    }
 
-	    User user = userRepository.findByEmail(email);   // 使用 Email 作為唯一鍵值去查詢該使用者
+	    User user = userRepository.findByEmail(email);   
 	    
 	    System.out.println("=== 重設密碼偵錯中 ===");
 	    System.out.println("表單輸入的名字: [" + name + "]");
 	    System.out.println("表單輸入的 Email: [" + email + "]");
 	    
-	    if (user != null) {   // 4. 進行身份驗證比對
+	    if (user != null) {   
 	        System.out.println("資料庫裡的人名: [" + user.getName() + "]");
 	        
 	        
-	        if (user.getName().trim().equals(name.trim())) { // 檢查資料庫中的名字與表單輸入的名字是否一致，
-	            user.setPassword(newPassword);               //使用 .trim() 移除前後空白，避免使用者不小心多打了空白鍵
+	        if (user.getName().trim().equals(name.trim())) { 
+	            user.setPassword(newPassword);               
 	            userRepository.save(user); 
 	            System.out.println("✅ 比對成功！密碼已存入資料庫。");
 	            model.addAttribute("message", "✅ 密碼已成功重設！請使用新密碼登入。");
@@ -356,7 +354,7 @@ public class CarController {
 	    return "forgot-password";
 	}
 	
-	@PostMapping("/submit-reservation") //處理賞車預約的 POST 請求，當使用者在預約頁面填寫姓名、車款、日期並送出時觸發
+	@PostMapping("/submit-reservation") 
 	public String handleReservation(@RequestParam String name, 
 	                                @RequestParam String carName, 
 	                                @RequestParam String date, 
@@ -364,13 +362,13 @@ public class CarController {
 	    
 	    
 	    LocalDate selectedDate = LocalDate.parse(date);
-	    LocalDate today = LocalDate.now();   // 取得執行程式當下的系統日期
+	    LocalDate today = LocalDate.now();   
 
 	    
-	    if (selectedDate.isBefore(today)) {   // 如果選擇的日期「早於」今天
+	    if (selectedDate.isBefore(today)) {   
 	        model.addAttribute("message", "❌ 預約失敗：日期不能選擇過去的時間！");
 	        
-	        model.addAttribute("allCars", carRepository.findAll());//因為要返回原頁面 (reserve)，必須重新撈取車輛清單，否則下拉選單會變空白
+	        model.addAttribute("allCars", carRepository.findAll());
 	        return "reserve";
 	    }
 
@@ -380,49 +378,49 @@ public class CarController {
 	    return "index";
 	}
 	
-	@PostMapping("/reserve") //處理預約表單提交並存入資料庫
+	@PostMapping("/reserve") 
 	public String submitReservation(@ModelAttribute("reservation") Reservation reservation, 
-            Principal principal, // 🚨 改用 Spring Security 的 Principal 憑證
-            RedirectAttributes redirectAttributes) { // 用來跨網頁傳遞成功訊息
+            Principal principal, 
+            RedirectAttributes redirectAttributes) { 
 
-    // 1. 檢查是否登入 (如果 principal 是空的，代表 Spring Security 說他沒登入)
+    
      if (principal == null) { 
      return "redirect:/login";
         }
 
-    // 2. 資料持久化 (存入資料庫)
+    
      reservationRepository.save(reservation);
 
      System.out.println("成功儲存預約！預約車款：" + reservation.getCarName() + "，預約人：" + reservation.getCustomerName());
 
-    // 3. 帶著成功提示訊息跳轉回首頁
+   
      redirectAttributes.addFlashAttribute("message", "🎉 預約成功！我們將會致電與您確認。");
 
      return "redirect:/index"; 
        }
 	
-	@GetMapping("/faq") //常見問題功能
+	@GetMapping("/faq") 
 	public String showFaqPage() {
 	    return "faq"; 
 	}
 	
 	@GetMapping("/calculator")
 	public String showCalculator() {
-	    return "calculator"; // 這裡對應calculator.html 檔名
+	    return "calculator";
 	}
 	
 	@GetMapping("/show-cars")
     public String listCars(Model model) {
-        // 從 MariaDB 抓取所有汽車
-		model.addAttribute("cars", carRepository.findByStatus("已上架"));
-        return "car"; // 對應到 car-list.html
+        
+		model.addAttribute("cars", carRepository.findByStatus(CarStatus.LISTED));
+        return "car"; 
     }
 	
-	// 顯示上架頁面
+	
 	@GetMapping("/car/add")
         public String showAddForm(HttpServletRequest request, Model model) {
 	    
-	    // 1. 改用 Spring Security 的方式檢查：是否未登入？ 或者 角色不是 ADMIN？
+	    
 	    if (request.getUserPrincipal() == null || !request.isUserInRole("ADMIN")) {
 	        model.addAttribute("message", "🔒 權限不足：只有管理員可以上架車輛！");
 	        return "login"; 
@@ -432,43 +430,47 @@ public class CarController {
 	    return "add-car"; 
 	}
 
-	// 執行上架儲存
+	
 	@PostMapping("/car/save")
 	public String saveCar(HttpServletRequest request, 
-            @ModelAttribute("car") Car car, 
-            @RequestParam("imageFile") MultipartFile imageFile,
-            @RequestParam(value = "featureList", required = false) List<String> featureList) {
+	        @ModelAttribute("car") Car car, 
+	        @RequestParam("imageFile") MultipartFile imageFile,
+	        @RequestParam(value = "featureList", required = false) List<String> featureList) {
 
-    // 1. 權限檢查：只有 ADMIN 能上架
-    if (request.getUserPrincipal() == null || !request.isUserInRole("ADMIN")) {
-    return "redirect:/login";
-  }
+	    if (request.getUserPrincipal() == null || !request.isUserInRole("ADMIN")) {
+	        return "redirect:/login";
+	    }
 
-    try {
-    // 2. 處理圖片上傳邏輯
-    if (imageFile != null && !imageFile.isEmpty()) {
-    String fileName = imageFile.getOriginalFilename();
-    // 🚨 注意：這會把圖片存到你專案的 static/images 資料夾下
-    Path path = Paths.get("src/main/resources/static/images/" + fileName);
-    Files.write(path, imageFile.getBytes());
-  
-    // 將圖片檔名存入資料庫
-    car.setImage(fileName);
-  }
+	    try {
+	        if (imageFile != null && !imageFile.isEmpty()) {
+	            String fileName = imageFile.getOriginalFilename();
+	            
+	            
+	            String uploadPath = System.getProperty("user.dir") + "/uploads/";
+	            java.io.File uploadDir = new java.io.File(uploadPath);
+	            if (!uploadDir.exists()) {
+	                uploadDir.mkdirs(); 
+	            }
+	            
+	            
+	            Path path = Paths.get(uploadPath + fileName);
+	            Files.write(path, imageFile.getBytes());
+	            
+	            
+	            car.setImage(fileName);
+	        }
 
-    // 3. 處理特色清單 (Features)
-    if (featureList != null) {
-    car.setFeatures(featureList);
-  }
+	        if (featureList != null) {
+	            car.setFeatures(featureList);
+	        }
 
-    } catch (Exception e) {
-    System.out.println("圖片上傳出錯：" + e.getMessage());
-  }
+	    } catch (Exception e) {
+	        System.out.println("圖片上傳出錯：" + e.getMessage());
+	    }
 
-    // 4. 設定狀態並存檔
-    car.setStatus("已上架"); 
-    carRepository.save(car);
+	    car.setStatus(CarStatus.LISTED);
+	    carRepository.save(car);
 
-    return "redirect:/index"; // 成功後跳回首頁看新卡片
-  }
+	    return "redirect:/index"; 
+	}
 }

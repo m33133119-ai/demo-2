@@ -1,7 +1,8 @@
-package com.example.demo;
+package com.example.demo;    //Java物件與MariaDB資料表連接
 
 import java.util.List;
 import javax.persistence.*;
+import com.example.demo.enums.CarStatus;
 
 @Entity
 @Table(name = "cars")
@@ -22,20 +23,23 @@ public class Car {
     private String mileage;
     private String phone;
     private String sellerName;
-    // 預設給予 "已上架"，這樣管理員新增時就不用手動填
-    private String status = "已上架";
 
-    @ElementCollection
-    @CollectionTable(name = "car_features", joinColumns = @JoinColumn(name = "car_id"))
-    @Column(name = "features")
+    //負責把 Java的Enum翻譯給資料庫
+    @Enumerated(EnumType.STRING)   
+    private CarStatus status = CarStatus.LISTED;
+    
+    //啟動分表機制
+    @ElementCollection            
+    @CollectionTable(name = "car_features", joinColumns = @JoinColumn(name = "car_id"))  //設定新表格
+    @Column(name = "features") //設定資料欄位
     private List<String> features;
 
-    // 1. 無參數建構子 (JPA 必備)
+    
     public Car() {}
 
- // 在 Car.java 裡面，請把這段貼上去替換舊的
+    //建構子
     public Car(Long id, String name, String price, String year, String image, 
-               String fuelType, String transmission, String mileage, String status, List<String> features) {
+               String fuelType, String transmission, String mileage, CarStatus status, List<String> features) {
         this.id = id;
         this.name = name;
         this.price = price;
@@ -43,14 +47,12 @@ public class Car {
         this.image = image;
         this.fuelType = fuelType;
         this.transmission = transmission;
-        this.mileage = mileage;   // 這裡確保是 String
-        this.status = status;    // 這裡確保有 status
+        this.mileage = mileage;   
+        this.status = status;    
         this.features = features;
     }
     
-
-    // --- Getter & Setter ---
-
+    //Getter&Setter
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
 
@@ -75,30 +77,20 @@ public class Car {
     public String getMileage() { return mileage; }
     public void setMileage(String mileage) { this.mileage = mileage; }
 
-    public String getStatus() { return status; }
-    public void setStatus(String status) { this.status = status; }
     
-    public String getPhone() {
-        return phone;
-    }
+    public CarStatus getStatus() { return status; }
+    public void setStatus(CarStatus status) { this.status = status; }
     
-    public void setPhone(String phone) {
-        this.phone = phone;
-    }
+    public String getPhone() { return phone; }
+    public void setPhone(String phone) { this.phone = phone; }
     
-    public String getSellerName() {
-        return sellerName;
-    }
-    
-    public void setSellerName(String sellerName) {
-        this.sellerName = sellerName;
-    }
+    public String getSellerName() { return sellerName; }
+    public void setSellerName(String sellerName) { this.sellerName = sellerName; }
 
-    // 🚨 補上這個，網頁才讀得到配備清單
     public List<String> getFeatures() { return features; }
     public void setFeatures(List<String> features) { this.features = features; }
     
- // 💡 這是「相容模式」建構子：即使沒傳 status，我們也預設它是 "已上架"
+    //建構子(全新上架)
     public Car(Long id, String name, String price, String year, String image, 
                String fuelType, String transmission, String mileage, List<String> features) {
         this.id = id;
@@ -110,7 +102,7 @@ public class Car {
         this.transmission = transmission;
         this.mileage = mileage;
         this.features = features;
-        this.status = "已上架"; // 預設值
+        this.status = CarStatus.LISTED; 
     }
 }
 

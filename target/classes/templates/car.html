@@ -1,7 +1,5 @@
 <!DOCTYPE html>
-<html lang="zh-Hant" 
-      xmlns:th="http://www.thymeleaf.org"
-      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<html lang="zh-Hant" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -11,7 +9,6 @@
 </head>
 <body class="bg-gray-50 text-gray-800">
 	
-	
 	<nav class="bg-white shadow-md sticky top-0 z-50">
 	    <div class="container mx-auto px-6 py-4 flex justify-between items-center relative">
 	        
@@ -19,37 +16,40 @@
 	            <i class="fas fa-car-side mr-2"></i>卓越中古車
 	        </a>
 
-	        <div class="hidden md:flex absolute left-1/2 transform -translate-x-1/2 space-x-12 font-medium">
+	        <div class="hidden md:flex absolute left-1/2 transform -translate-x-1/2 space-x-12 font-medium items-center">
 	            <a th:href="@{/index}" class="hover:text-blue-600 transition">所有車輛</a>
 	            <a th:href="@{/sell}" class="hover:text-blue-600 transition">我要賣車</a>
-				<li class="nav-item" sec:authorize="hasRole('ADMIN')">
-				    <a class="nav-link" href="/car/add">
-				        <i class="fas fa-plus-circle"></i> 上架車款
-				    </a>
-				</li>
+                
+                <!-- ★ 修改：改用 Session 判斷是否為 ADMIN -->
+				<a th:if="${session.loggedInUser != null and session.loggedInUser.role == 'ADMIN'}" href="/car/add" class="hover:text-blue-600 transition flex items-center">
+				    <i class="fas fa-plus-circle mr-1"></i> 上架車款
+				</a>
+                
 	            <a th:href="@{/reserve}" class="hover:text-blue-600 transition">預約賞車</a>
 	            <a href="#about-us" class="hover:text-blue-600 transition">關於我們</a>
 	        </div>
 
 			<div class="flex items-center space-x-4 z-10">
 			    
-			    <div sec:authorize="isAuthenticated()" class="flex items-center space-x-4">
+                <!-- ★ 修改：如果 Session 裡有 loggedInUser，代表已登入，顯示以下區塊 -->
+			    <div th:if="${session.loggedInUser != null}" class="flex items-center space-x-4">
 			        <a th:href="@{/my-reservations}" 
 			           class="bg-gray-100 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-200 transition flex items-center text-sm font-medium">
 			            <i class="fas fa-list-ul mr-2 text-blue-600"></i>我的預約
 			        </a>
 			        <span class="font-medium text-gray-700">
-			            Hi, <span sec:authentication="principal.fullName" class="text-blue-600 font-bold"></span>
+                        <!-- ★ 修改：從 Session 中讀取會員名字 -->
+			            Hi, <span th:text="${session.loggedInUser.name}" class="text-blue-600 font-bold"></span>
 			        </span>
 			        
-			        <form th:action="@{/logout}" method="post" class="m-0">
-			            <button type="submit" class="text-sm text-red-500 hover:underline bg-transparent border-none cursor-pointer">
-			                登出
-			            </button>
-			        </form>
+                    <!-- ★ 修改：改用 JS 呼叫登出 API -->
+                    <button onclick="logout()" class="text-sm text-red-500 hover:underline bg-transparent border-none cursor-pointer">
+                        登出
+                    </button>
 			    </div>
 
-			    <a sec:authorize="isAnonymous()" th:href="@{/login}" 
+                <!-- ★ 修改：如果 Session 裡沒有 loggedInUser，代表未登入，顯示登入按鈕 -->
+			    <a th:unless="${session.loggedInUser != null}" th:href="@{/login}" 
 			       class="bg-blue-600 text-white px-5 py-2 rounded-full hover:bg-blue-700 transition inline-block">
 			        登入 / 註冊
 			    </a>
@@ -58,28 +58,27 @@
 	    </div>
 	</nav>
 
+    <!-- 中間的英雄區塊與車輛列表維持你的原樣 -->
     <section class="bg-blue-900 text-white py-20 px-6 bg-cover bg-center" style="background-image: linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), url('https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?auto=format&fit=crop&q=80&w=1920');">
         <div class="container mx-auto text-center">
             <h1 class="text-4xl md:text-6xl font-bold mb-6">尋找您的下一部好車</h1>
             <p class="text-xl mb-10 text-gray-200">超過 500 輛嚴選中古車，提供完整鑑定報告</p>
             
 			<form action="/index" method="get" class="bg-white p-4 rounded-lg shadow-lg max-w-4xl mx-auto flex flex-wrap gap-4 text-gray-700">
-			    
 			    <input type="text" name="keyword" th:value="${param.keyword}" placeholder="輸入品牌或車名 (如：BMW)..." class="flex-1 min-w-[200px] border p-2 rounded focus:outline-none focus:ring-2 focus:ring-blue-500">
-			    
 				<select name="priceRange" class="flex-1 min-w-[150px] border p-2 rounded">
 				    <option value="">價格區間</option>
 					<option value="under50">50萬以下</option> 
 					<option value="50-100">50-100萬</option>
 					<option value="100over">100萬以上</option>
 			    </select>
-
 			    <button type="submit" class="w-full md:w-auto bg-blue-600 text-white px-8 py-2 rounded hover:bg-blue-700 transition font-bold">
 			        立即搜尋
 			    </button>
 			</form>
 		</div>
 	</section>
+
     <div class="bg-yellow-100 p-4 text-center">
         <span class="text-xl font-bold text-red-600" th:text="${message}">載入中...</span>
     </div>
@@ -91,13 +90,11 @@
 	    </h2>
 	    
 	    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-	        
 	        <div th:each="c : ${cars}" class="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-xl transition-shadow border border-gray-100 flex flex-col h-full">
-	            <img th:src="@{'/images/' + ${c.image}}" alt="Car" class="w-full h-48 object-cover">
+				<img th:src="@{'/uploads/' + ${c.image}}" alt="Car" class="w-full h-48 object-cover">
 	            
 	            <div class="p-4 flex-grow flex flex-col">
 	                <span th:text="${c.year}" class="bg-blue-100 text-blue-800 text-[10px] font-semibold px-2 py-0.5 rounded w-fit">年份</span>
-	                
 	                <h3 th:text="${c.name}" class="text-lg font-bold mt-2 text-gray-800 truncate">車名</h3>
 	                <p th:text="${c.price}" class="text-red-600 font-bold text-lg mt-1">價格</p>
 
@@ -135,7 +132,8 @@
 	                    </a>
 	                </div>
 					
-					<div sec:authorize="hasRole('ADMIN')" class="mt-2 border-t pt-2">
+                    <!-- ★ 修改：管理員下架車輛按鈕，改用 Session 判斷 -->
+					<div th:if="${session.loggedInUser != null and session.loggedInUser.role == 'ADMIN'}" class="mt-2 border-t pt-2">
 					    <form th:action="@{/car/delete/{id}(id=${c.id})}" method="post" 
 					          onsubmit="return confirm('確定要將這輛車下架嗎？此動作無法復原。')">
 					        <button type="submit" class="w-full bg-red-50 text-red-600 py-2 rounded-lg font-bold hover:bg-red-100 transition text-xs flex items-center justify-center">
@@ -154,7 +152,6 @@
 	            <h2 class="text-3xl font-bold mb-4">關於卓越中古車</h2>
 	            <p class="text-gray-600 max-w-2xl mx-auto">我們致力於提供最優質的二手車買賣服務，讓每一位顧客都能安心選購理想座駕。</p>
 	        </div>
-
 	        <div class="grid grid-cols-1 md:grid-cols-3 gap-12">
 	            <div class="text-center p-8 rounded-2xl bg-blue-50 hover:shadow-lg transition">
 	                <div class="w-16 h-16 bg-blue-600 text-white rounded-full flex items-center justify-center mx-auto mb-6 text-2xl">
@@ -163,7 +160,6 @@
 	                <h3 class="text-xl font-bold mb-4">嚴格車況把關</h3>
 	                <p class="text-gray-600 leading-relaxed">每台車輛上架前皆經過仔細檢查，排除重大事故與泡水車，讓您買得安心、開得放心。</p>
 	            </div>
-
 	            <div class="text-center p-8 rounded-2xl bg-blue-50 hover:shadow-lg transition">
 	                <div class="w-16 h-16 bg-blue-600 text-white rounded-full flex items-center justify-center mx-auto mb-6 text-2xl">
 	                    <i class="fas fa-tags"></i>
@@ -171,7 +167,6 @@
 	                <h3 class="text-xl font-bold mb-4">實車實價透明</h3>
 	                <p class="text-gray-600 leading-relaxed">堅持實車在店、價格公開透明，絕不以低價盲目吸引客人，保障您的購車權益。</p>
 	            </div>
-
 	            <div class="text-center p-8 rounded-2xl bg-blue-50 hover:shadow-lg transition">
 	                <div class="w-16 h-16 bg-blue-600 text-white rounded-full flex items-center justify-center mx-auto mb-6 text-2xl">
 	                    <i class="fas fa-handshake"></i>
@@ -197,7 +192,6 @@
 					        常見問題
 					    </a>
 					</li>
-
 					<li><a th:href="@{/calculator}" class="hover:text-white transition">貸款試算</a></li>
                 </ul>
             </div>
@@ -205,8 +199,6 @@
                 <h4 class="text-white text-lg font-bold mb-4">聯絡我們</h4>
                 <p class="text-sm">地址：台北市信義區某某路 88 號</p>
                 <p class="text-sm">電話：02-1234-5678</p>
-            </div>
-            
             </div>
         </div>
         <div class="border-t border-gray-800 mt-10 pt-6 text-center text-xs">
@@ -216,13 +208,11 @@
 	
 	<div id="carModal" class="fixed inset-0 z-[60] hidden overflow-y-auto px-4 py-6">
 	    <div class="fixed inset-0 bg-black/70 backdrop-blur-sm" onclick="closeModal()"></div>
-
 	    <div class="relative mx-auto bg-white rounded-2xl shadow-2xl max-w-3xl overflow-hidden transform transition-all mt-10">
 	        <div class="flex flex-col md:flex-row">
 				<div class="md:w-1/2 h-64 md:h-[450px] bg-gray-100 flex items-center justify-center">
 				    <img id="modalImage" src="" class="max-w-full max-h-full object-contain">
 				</div>
-
 	            <div class="md:w-1/2 p-8">
 	                <div class="flex justify-between items-start">
 	                    <h2 id="modalName" class="text-2xl font-bold text-gray-800"></h2>
@@ -254,16 +244,12 @@
 	        });
 
 	        if (car) {
-	            // ✅ 修正點 2：加上 /images/ 前綴
-	            document.getElementById('modalImage').src = '/images/' + car.image; 
-	            
+	            document.getElementById('modalImage').src = '/uploads/' + car.image; 
 	            document.getElementById('modalName').innerText = car.name;
 	            document.getElementById('modalPrice').innerText = car.price;
 	            document.getElementById('modalYear').innerText = car.year;
 	            document.getElementById('modalFuel').innerText = car.fuelType;
 	            document.getElementById('modalTrans').innerText = car.transmission;
-	            
-	            // ✅ 修正點 3：因為 mileage 現在是 String，直接顯示即可，不使用 toLocaleString
 	            document.getElementById('modalMileage').innerText = car.mileage;
 	            
 	            if (car.features && car.features.length > 0) {
@@ -282,6 +268,16 @@
 	        document.getElementById('carModal').classList.add('hidden');
 	        document.body.style.overflow = 'auto';
 	    }
+
+        // ★ 新增：處理點擊登出的功能
+        function logout() {
+            fetch('/api/users/logout', { method: 'GET' })
+            .then(response => {
+                // 登出後，跳轉回登入頁面，並在網址帶上 logout 參數，讓登入頁顯示綠色成功提示
+                window.location.href = '/login?logout=true';
+            })
+            .catch(error => console.error('登出發生錯誤:', error));
+        }
 	</script>
 </body>
 </html>

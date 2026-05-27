@@ -13,14 +13,28 @@
             <h2 class="text-xl text-gray-500 mt-2">建立您的專屬帳號</h2>
         </div>
         
-		<form th:action="@{/register}" method="post" class="space-y-5">
+        <!-- ★ 新增：成功提示框 (綠色) -->
+        <div id="successMessage" class="hidden mb-6 p-4 rounded-lg bg-green-50 border-l-4 border-green-500 text-green-700 flex items-center shadow-sm">
+            <i class="fas fa-check-circle mr-3 text-xl"></i>
+            <span id="successText" class="text-sm font-medium"></span>
+        </div>
+
+        <!-- ★ 新增：錯誤提示框 (紅色) -->
+        <div id="errorMessage" class="hidden mb-6 p-4 rounded-lg bg-red-50 border-l-4 border-red-500 text-red-700 flex items-center shadow-sm">
+            <i class="fas fa-exclamation-circle mr-3 text-xl"></i>
+            <span id="errorText" class="text-sm font-medium"></span>
+        </div>
+        
+        <!-- ★ 修改：移除 th:action，加上 id="registerForm" -->
+		<form id="registerForm" class="space-y-5">
 		    <div>
 		        <label class="block text-sm font-medium text-gray-700 mb-1">真實姓名</label>
 		        <div class="relative">
 		            <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-400">
 		                <i class="fas fa-user"></i>
 		            </span>
-		            <input type="text" name="name" required 
+                    <!-- ★ 修改：加上 id="name" -->
+		            <input type="text" name="name" id="name" required 
 		                   class="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition"
 		                   placeholder="請輸入您的姓名">
 		        </div>
@@ -32,7 +46,8 @@
 		            <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-400">
 		                <i class="fas fa-envelope"></i>
 		            </span>
-		            <input type="email" name="email" required 
+                    <!-- ★ 修改：加上 id="email" -->
+		            <input type="email" name="email" id="email" required 
 		                   class="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition"
 		                   placeholder="example@mail.com">
 		        </div>
@@ -44,11 +59,9 @@
 			        <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-400">
 			            <i class="fas fa-lock"></i>
 			        </span>
-			        <input type="password" name="password" required 
-			               minlength="8" 
-			               maxlength="8" 
-			               pattern="\d{8}" 
-			               inputmode="numeric"
+                    <!-- ★ 修改：加上 id="password" -->
+			        <input type="password" name="password" id="password" required 
+			               minlength="8" maxlength="8" pattern="\d{8}" inputmode="numeric"
 			               title="請輸入剛好 8 位數字"
 			               class="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition"
 			               placeholder="請輸入 8 位數字">
@@ -61,11 +74,9 @@
 			        <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-400">
 			            <i class="fas fa-shield-alt"></i>
 			        </span>
-			        <input type="password" name="confirmPassword" required 
-			               minlength="8" 
-			               maxlength="8" 
-			               pattern="\d{8}" 
-			               inputmode="numeric"
+                    <!-- ★ 修改：加上 id="confirmPassword" -->
+			        <input type="password" name="confirmPassword" id="confirmPassword" required 
+			               minlength="8" maxlength="8" pattern="\d{8}" inputmode="numeric"
 			               title="請再次輸入 8 位數字"
 			               class="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition"
 			               placeholder="再次輸入 8 位數字以確認">
@@ -79,9 +90,10 @@
 		        </label>
 		    </div>
 
-		    <button type="submit" 
-		            class="w-full bg-blue-600 text-white py-3 rounded-lg font-bold hover:bg-blue-700 shadow-lg transition transform active:scale-95">
-		        立即註冊帳號
+            <!-- ★ 修改：加上 id="submitBtn" 方便控制狀態 -->
+		    <button type="submit" id="submitBtn"
+		            class="w-full bg-blue-600 text-white py-3 rounded-lg font-bold hover:bg-blue-700 shadow-lg transition transform active:scale-95 flex justify-center items-center">
+		        <span>立即註冊帳號</span>
 		    </button>
 		</form>
         
@@ -89,5 +101,78 @@
             已經有帳號了？ <a href="/login" class="text-blue-600 font-bold hover:underline">返回登入</a>
         </div>
     </div>
+
+    <!-- ★ 新增：與後端 API 溝通的 JavaScript -->
+    <script>
+        document.getElementById('registerForm').addEventListener('submit', function(event) {
+            event.preventDefault(); // 阻止傳統跳轉
+
+            const nameValue = document.getElementById('name').value;
+            const emailValue = document.getElementById('email').value;
+            const passwordValue = document.getElementById('password').value;
+            const confirmPasswordValue = document.getElementById('confirmPassword').value;
+
+            const errorBox = document.getElementById('errorMessage');
+            const errorText = document.getElementById('errorText');
+            const successBox = document.getElementById('successMessage');
+            const successText = document.getElementById('successText');
+            const submitBtn = document.getElementById('submitBtn');
+
+            // 1. 初始化：隱藏提示框
+            errorBox.classList.add('hidden');
+            successBox.classList.add('hidden');
+
+            // 2. 前端防呆：檢查兩次密碼是否一致
+            if (passwordValue !== confirmPasswordValue) {
+                errorText.textContent = "兩次輸入的密碼不一致，請重新確認！";
+                errorBox.classList.remove('hidden');
+                return; // 停止往下執行
+            }
+
+            // 3. 按鈕變身：顯示讀取中，並禁止重複點擊
+            const originalBtnContent = submitBtn.innerHTML;
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> 註冊處理中...';
+            submitBtn.disabled = true;
+            submitBtn.classList.add('opacity-75', 'cursor-not-allowed');
+
+            // 4. 呼叫後端 API
+            fetch('/api/users/register', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    name: nameValue,
+                    email: emailValue,
+                    password: passwordValue
+                })
+            })
+            .then(async response => {
+                const message = await response.text();
+
+                if (response.ok) {
+                    // 綠燈：註冊成功
+                    successText.textContent = message; // 顯示後端傳來的「註冊成功，請前往信箱驗證」
+                    successBox.classList.remove('hidden');
+                    document.getElementById('registerForm').reset(); // 清空表單
+                } else {
+                    // 紅燈：可能有重複帳號等錯誤
+                    errorText.textContent = message;
+                    errorBox.classList.remove('hidden');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                errorText.textContent = "系統連線發生錯誤，請稍後再試！";
+                errorBox.classList.remove('hidden');
+            })
+            .finally(() => {
+                // 5. 任務結束，把按鈕變回原樣
+                submitBtn.innerHTML = originalBtnContent;
+                submitBtn.disabled = false;
+                submitBtn.classList.remove('opacity-75', 'cursor-not-allowed');
+            });
+        });
+    </script>
 </body>
 </html>
